@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../controllers/auth_controller.dart';
 import '../models/usuario.dart';
 
@@ -12,87 +13,175 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   String email = '', password = '';
   bool isRegister = false;
-  // Campos extra para registro:
-  String nombre = '', telefono = '', rol = '';
+  String nombre = '', telefono = '';
+
+  void _mostrarError(BuildContext context, String mensaje) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('Error'),
+        content: Text(mensaje),
+        actions: [
+          TextButton(
+            child: Text('Aceptar'),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
-  Widget build(BuildContext ctx) {
+  Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(isRegister ? 'Registro' : 'Login')),
-      body: Padding(
-        padding: EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: ListView(
+      backgroundColor: Color(0xFFF5F5F5),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              TextFormField(
-                decoration: InputDecoration(labelText: 'Email'),
-                onSaved: (v) => email = v!.trim(),
-                validator: (v) => v!.contains('@') ? null : 'Email inválido',
+              Image.asset(
+                'assets/images/espe_logo.png',
+                width: 100,
               ),
-              TextFormField(
-                decoration: InputDecoration(labelText: 'Password'),
-                obscureText: true,
-                onSaved: (v) => password = v!.trim(),
-                validator: (v) =>
-                    v!.length >= 6 ? null : 'Al menos 6 caracteres',
-              ),
-              if (isRegister) ...[
-                TextFormField(
-                  decoration: InputDecoration(labelText: 'Nombre'),
-                  onSaved: (v) => nombre = v!.trim(),
-                  validator: (v) => v!.isNotEmpty ? null : 'Requerido',
-                ),
-                TextFormField(
-                  decoration: InputDecoration(labelText: 'Teléfono'),
-                  onSaved: (v) => telefono = v!.trim(),
-                  validator: (v) => v!.isNotEmpty ? null : 'Requerido',
-                ),
-                TextFormField(
-                  decoration: InputDecoration(labelText: 'Rol'),
-                  onSaved: (v) => rol = v!.trim(),
-                  validator: (v) => v!.isNotEmpty ? null : 'Requerido',
-                ),
-              ],
               SizedBox(height: 20),
-              ElevatedButton(
-                child: Text(isRegister ? 'Registrar' : 'Ingresar'),
-                onPressed: () async {
-                  if (!_formKey.currentState!.validate()) return;
-                  _formKey.currentState!.save();
-
-                  String? error;
-                  if (isRegister) {
-                    // crear perfil y credenciales
-                    final perfil = Usuario(
-                      id: '', // se pondrá en controller
-                      nombre: nombre,
-                      email: email,
-                      telefono: telefono,
-                      rol: rol,
-                    );
-                    error = await _authC.register(
-                      email: email,
-                      password: password,
-                      perfil: perfil,
-                    );
-                  } else {
-                    error = await _authC.login(
-                      email: email,
-                      password: password,
-                    );
-                  }
-                  if (error != null) {
-                    ScaffoldMessenger.of(ctx)
-                        .showSnackBar(SnackBar(content: Text(error)));
-                  }
-                },
+              Text(
+                isRegister ? 'Registro ESPE' : 'Ingreso ESPE',
+                style: GoogleFonts.roboto(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF0A6E39),
+                ),
               ),
-              TextButton(
-                child: Text(isRegister
-                    ? '¿Ya tienes cuenta? Inicia sesión'
-                    : '¿No tienes cuenta? Regístrate'),
-                onPressed: () => setState(() => isRegister = !isRegister),
+              SizedBox(height: 20),
+              Card(
+                elevation: 8,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          decoration: InputDecoration(
+                            labelText: 'Correo institucional',
+                            hintText: 'ejemplo@espe.edu.ec',
+                            prefixIcon: Icon(Icons.email),
+                          ),
+                          keyboardType: TextInputType.emailAddress,
+                          onSaved: (v) => email = v!.trim(),
+                          validator: (v) {
+                            if (v == null || !v.endsWith('@espe.edu.ec')) {
+                              return 'Debe usar correo @espe.edu.ec';
+                            }
+                            return null;
+                          },
+                        ),
+                        SizedBox(height: 12),
+                        TextFormField(
+                          decoration: InputDecoration(
+                            labelText: 'Contraseña',
+                            hintText: '********',
+                            prefixIcon: Icon(Icons.lock),
+                          ),
+                          obscureText: true,
+                          onSaved: (v) => password = v!.trim(),
+                          validator: (v) {
+                            if (v == null ||
+                                !RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{6,}$')
+                                    .hasMatch(v)) {
+                              return 'Contraseña inválida';
+                            }
+                            return null;
+                          },
+                        ),
+                        if (isRegister) ...[
+                          SizedBox(height: 12),
+                          TextFormField(
+                            decoration: InputDecoration(
+                              labelText: 'Nombre completo',
+                              prefixIcon: Icon(Icons.person),
+                            ),
+                            onSaved: (v) => nombre = v!.trim(),
+                            validator: (v) =>
+                                v!.isNotEmpty ? null : 'Campo requerido',
+                          ),
+                          SizedBox(height: 12),
+                          TextFormField(
+                            decoration: InputDecoration(
+                              labelText: 'Teléfono (10 dígitos)',
+                              prefixIcon: Icon(Icons.phone),
+                            ),
+                            keyboardType: TextInputType.phone,
+                            onSaved: (v) => telefono = v!.trim(),
+                            validator: (v) {
+                              if (v == null || v.length != 10) {
+                                return 'Debe tener 10 dígitos';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
+                        SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: () async {
+                            if (!_formKey.currentState!.validate()) {
+                              _mostrarError(context,
+                                  'Verifica los campos. Requisitos:\n\n• Correo @espe.edu.ec\n• Teléfono: 10 dígitos\n• Contraseña: al menos una mayúscula, una minúscula, un número y un símbolo.');
+                              return;
+                            }
+
+                            _formKey.currentState!.save();
+
+                            String? error;
+                            if (isRegister) {
+                              final perfil = Usuario(
+                                id: '',
+                                nombre: nombre,
+                                email: email,
+                                telefono: telefono,
+                                rol: 'usuario',
+                              );
+                              error = await _authC.register(
+                                email: email,
+                                password: password,
+                                perfil: perfil,
+                              );
+                            } else {
+                              error = await _authC.login(
+                                email: email,
+                                password: password,
+                              );
+                            }
+
+                            if (error != null) {
+                              _mostrarError(context, error);
+                            }
+                          },
+                          child: Text(isRegister ? 'Registrar' : 'Ingresar'),
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: Size(double.infinity, 48),
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        TextButton(
+                          onPressed: () =>
+                              setState(() => isRegister = !isRegister),
+                          child: Text(
+                            isRegister
+                                ? '¿Ya tienes cuenta? Inicia sesión'
+                                : '¿No tienes cuenta? Regístrate',
+                            style: TextStyle(color: Color(0xFF0A6E39)),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                ),
               )
             ],
           ),
