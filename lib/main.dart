@@ -5,6 +5,7 @@ import 'firebase_options.dart';
 import 'views/home_page.dart';
 import 'views/login_page.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,42 +22,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Sistema Parqueadero ESPE',
-      theme: ThemeData(
-        primaryColor: Color(0xFF0A6E39),
-        scaffoldBackgroundColor: Color(0xFFF5F5F5),
-        colorScheme: ColorScheme.fromSwatch().copyWith(
-          primary: Color(0xFF0A6E39),
-          secondary: Color(0xFFF4B400),
-          error: Color(0xFFD32F2F),
-        ),
-        textTheme: GoogleFonts.robotoTextTheme(),
-        appBarTheme: AppBarTheme(
-          backgroundColor: Color(0xFF0A6E39),
-          foregroundColor: Colors.white,
-          titleTextStyle: GoogleFonts.roboto(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF0A6E39),
-            foregroundColor: Colors.white,
-            textStyle: GoogleFonts.roboto(fontSize: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          border: OutlineInputBorder(),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Color(0xFF0A6E39)),
-          ),
-          labelStyle: GoogleFonts.roboto(color: Colors.black87),
-        ),
-      ),
+      theme: appTheme,
       home: StreamBuilder(
         stream: _authCtrl.authStateChanges,
         builder: (ctx, snapshot) {
