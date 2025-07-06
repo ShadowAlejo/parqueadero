@@ -22,6 +22,9 @@ class AuthController {
       );
       // usa el UID generado como id de tu perfil
       final uid = cred.user!.uid;
+      // construye el perfil con el uid y escribe en Firestore
+      final perfilConId = perfil.copyWith(id: uid);
+      await _colUsuarios.doc(uid).set(perfilConId.toMap());
       await _colUsuarios
           .doc(uid)
           .set(perfil.copyWith(id: uid).toMap()); // toMap de tu modelo

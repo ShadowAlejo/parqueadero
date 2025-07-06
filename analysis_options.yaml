@@ -53,14 +53,10 @@ analyzer:
     unnecessary_statements: ignore
     unnecessary_string_interpolations: ignore
     unnecessary_string_escapes: ignore
-    unnecessary_this: ignore
     use_key_in_widget_constructors: ignore
     prefer_const_constructors_in_immutables: ignore
-    prefer_const_declarations: ignore
-    prefer_const_literals_to_create_immutables: ignore
     prefer_final_fields: ignore
     prefer_final_in_for_each: ignore
-    prefer_final_locals: ignore
     prefer_function_declarations_over_variables: ignore
     prefer_generic_function_type_aliases: ignore
     prefer_if_elements_to_conditional_expressions: ignore
@@ -72,7 +68,6 @@ analyzer:
     prefer_null_aware_operators: ignore
     prefer_single_quotes: ignore
     prefer_spread_collections: ignore
-    prefer_typing_uninitialized_variables: ignore
     recursive_getters: ignore
     slash_for_doc_comments: ignore
     sort_child_properties_last: ignore
@@ -85,16 +80,6 @@ analyzer:
     unnecessary_const: ignore
     unnecessary_getters_setters: ignore
     unnecessary_lambdas: ignore
-    unnecessary_new: ignore
-    unnecessary_null_aware_assignments: ignore
-    unnecessary_null_in_if_null_operators: ignore
-    unnecessary_overrides: ignore
-    unnecessary_parenthesis: ignore
-    unnecessary_statements: ignore
-    unnecessary_string_interpolations: ignore
-    unnecessary_string_escapes: ignore
-    unnecessary_this: ignore
-    use_key_in_widget_constructors: ignore
     valid_regexps: ignore
     void_checks: ignore
     always_declare_return_types: ignore
@@ -188,56 +173,13 @@ analyzer:
     prefer_bool_in_asserts: ignore
     prefer_collection_literals: ignore
     prefer_conditional_assignment: ignore
-    prefer_const_constructors: ignore
-    prefer_const_declarations: ignore
-    prefer_const_literals_to_create_immutables: ignore
     prefer_contains: ignore
     prefer_double_quotes: ignore
     prefer_equal_for_default_values: ignore
     prefer_expression_function_bodies: ignore
-    prefer_final_fields: ignore
-    prefer_final_in_for_each: ignore
-    prefer_final_locals: ignore
     prefer_for_elements_to_map_fromIterable: ignore
     prefer_foreach: ignore
-    prefer_function_declarations_over_variables: ignore
-    prefer_generic_function_type_aliases: ignore
-    prefer_if_elements_to_conditional_expressions: ignore
-    prefer_inlined_adds: ignore
     prefer_int_literals: ignore
-    prefer_interpolation_to_compose_strings: ignore
-    prefer_is_empty: ignore
-    prefer_is_not_empty: ignore
-    prefer_iterable_whereType: ignore
-    prefer_null_aware_operators: ignore
-    prefer_single_quotes: ignore
-    prefer_spread_collections: ignore
-    prefer_typing_uninitialized_variables: ignore
-    recursive_getters: ignore
-    slash_for_doc_comments: ignore
-    sort_child_properties_last: ignore
-    sort_constructors_first: ignore
-    sort_unnamed_constructors_first: ignore
     test_types_in_equals: ignore
     throw_in_finally: ignore
-    type_annotate_public_apis: ignore
-    type_init_formals: ignore
-    unawaited_futures: ignore
-    unnecessary_await_in_return: ignore
-    unnecessary_brace_in_string_interps: ignore
-    unnecessary_const: ignore
     unnecessary_final: ignore
-    unnecessary_getters_setters: ignore
-    unnecessary_lambdas: ignore
-    unnecessary_new: ignore
-    unnecessary_null_aware_assignments: ignore
-    unnecessary_null_in_if_null_operators: ignore
-    unnecessary_overrides: ignore
-    unnecessary_parenthesis: ignore
-    unnecessary_statements: ignore
-    unnecessary_string_interpolations: ignore
-    unnecessary_string_escapes: ignore
-    unnecessary_this: ignore
-    use_key_in_widget_constructors: ignore
-    valid_regexps: ignore
-    void_checks: ignore
