@@ -65,7 +65,7 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Bienvenido, ${usuario!.nombre}',
+                    'Bienvenido',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   SizedBox(height: 16),
@@ -82,7 +82,7 @@ class _HomePageState extends State<HomePage> {
                           CircleAvatar(
                             radius: 36,
                             backgroundImage:
-                                AssetImage('assets/images/logo_app.png'),
+                                AssetImage('assets/images/usuario.png'),
                           ),
                           SizedBox(width: 20),
                           Expanded(
@@ -129,13 +129,13 @@ class _HomePageState extends State<HomePage> {
                                 SizedBox(height: 4),
                                 Row(
                                   children: [
-                                    Icon(Icons.payments,
+                                    Icon(Icons.local_parking,
                                         color: Colors.blue, size: 20),
                                     SizedBox(width: 4),
-                                    Text('Próximo pago: ',
+                                    Text('Código: ',
                                         style: TextStyle(
                                             fontWeight: FontWeight.w500)),
-                                    Text('15/06/2024',
+                                    Text('ESPE-1234',
                                         style: TextStyle(
                                             color: Colors.blue[800],
                                             fontWeight: FontWeight.bold)),
@@ -164,6 +164,7 @@ class _HomePageState extends State<HomePage> {
                       _buildMenuButton(Icons.bookmark, 'Mis reservas'),
                       if (usuario!.rol == 'admin')
                         _buildMenuButton(Icons.analytics, 'Ver reportes'),
+                      _buildMenuButton(Icons.settings, 'Configuración'),
                     ],
                   ),
                 ],
@@ -185,6 +186,12 @@ class _HomePageState extends State<HomePage> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => MisReservasScreen()),
+          );
+        }
+        if (label == 'Configuración') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ConfiguracionScreen()),
           );
         }
         // Aquí puedes agregar otras navegaciones para otros botones si lo deseas
@@ -832,6 +839,77 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
                       );
                     }).toList(),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Pantalla de Configuración
+class ConfiguracionScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Configuración'),
+        backgroundColor: Color(0xFF0A6E39),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Foto de perfil',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            SizedBox(height: 12),
+            Center(
+              child: Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 48,
+                    backgroundImage: AssetImage('assets/images/usuario.png'),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: CircleAvatar(
+                      backgroundColor: Colors.white,
+                      child: Icon(Icons.edit, color: Color(0xFF0A6E39)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 32),
+            Text('Cambiar contraseña',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: () {
+                // Aquí iría la lógica para cambiar contraseña
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text('Cambiar contraseña'),
+                    content: Text('Funcionalidad próximamente disponible.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text('OK'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              icon: Icon(Icons.lock_reset),
+              label: Text('Cambiar contraseña'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF0A6E39),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ],
