@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme.dart';
 
 class DatosVehicularesScreen extends StatefulWidget {
   @override
@@ -49,7 +50,7 @@ class _DatosVehicularesScreenState extends State<DatosVehicularesScreen> {
       case 'verde':
         return Colors.green;
       default:
-        return Color(0xFF0A6E39);
+        return AppColors.primary;
     }
   }
 
@@ -171,7 +172,7 @@ class _DatosVehicularesScreenState extends State<DatosVehicularesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Datos Vehiculares'),
-        backgroundColor: Color(0xFF0A6E39),
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: ListView.builder(
         padding: EdgeInsets.all(16),
@@ -221,7 +222,7 @@ class _DatosVehicularesScreenState extends State<DatosVehicularesScreen> {
         onPressed: () => _agregarVehiculo(context),
         icon: Icon(Icons.add),
         label: Text('Agregar vehículo'),
-        backgroundColor: Color(0xFF0A6E39),
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
     );
   }

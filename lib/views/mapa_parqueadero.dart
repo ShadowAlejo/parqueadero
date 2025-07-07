@@ -65,7 +65,7 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text('Mapa de parqueadero'),
-        backgroundColor: Color(0xFF0A6E39),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         actions: [
           IconButton(
             icon: Icon(Icons.help_outline),
@@ -84,14 +84,15 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.location_on, color: Color(0xFF0A6E39)),
+                  Icon(Icons.location_on,
+                      color: Theme.of(context).colorScheme.primary),
                   SizedBox(width: 6),
                   Text(
                     'ESPE - Belisario Quevedo',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF0A6E39),
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                 ],
@@ -107,8 +108,9 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
                         height: squareSize - 32,
                         decoration: BoxDecoration(
                           color: Colors.black12,
-                          border:
-                              Border.all(color: Color(0xFF0A6E39), width: 2),
+                          border: Border.all(
+                              color: Theme.of(context).colorScheme.primary,
+                              width: 2),
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
@@ -137,7 +139,8 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.85),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Color(0xFF0A6E39)),
+                            border: Border.all(
+                                color: Theme.of(context).colorScheme.primary),
                           ),
                           child: Text(
                             'Zoom: x${zoomLevel.toStringAsFixed(2)}',
@@ -162,12 +165,16 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     shape: BoxShape.circle,
-                                    border:
-                                        Border.all(color: Color(0xFF0A6E39)),
+                                    border: Border.all(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary),
                                   ),
                                   padding: EdgeInsets.all(8),
                                   child: Icon(Icons.refresh,
-                                      color: Color(0xFF0A6E39)),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary),
                                 ),
                               ),
                             ),
@@ -211,7 +218,8 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
                   decoration: BoxDecoration(
                     color: Color(0xFFF4F6F8),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Color(0xFF0A6E39), width: 1),
+                    border: Border.all(
+                        color: Theme.of(context).colorScheme.primary, width: 1),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black12,
@@ -229,13 +237,14 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
-                          color: Color(0xFF0A6E39),
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
                       SizedBox(height: 8),
                       Row(
                         children: [
-                          Icon(Icons.directions_car, color: Color(0xFF0A6E39)),
+                          Icon(Icons.directions_car,
+                              color: Theme.of(context).colorScheme.primary),
                           SizedBox(width: 8),
                           Text('Espacio: B-12', style: TextStyle(fontSize: 15)),
                         ],
@@ -243,7 +252,8 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
                       SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(Icons.access_time, color: Color(0xFF0A6E39)),
+                          Icon(Icons.access_time,
+                              color: Theme.of(context).colorScheme.primary),
                           SizedBox(width: 8),
                           Text('Hora de entrada: 08:30',
                               style: TextStyle(fontSize: 15)),
@@ -252,7 +262,8 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
                       SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(Icons.date_range, color: Color(0xFF0A6E39)),
+                          Icon(Icons.date_range,
+                              color: Theme.of(context).colorScheme.primary),
                           SizedBox(width: 8),
                           Text('Fecha: 2024-06-10',
                               style: TextStyle(fontSize: 15)),
@@ -291,12 +302,15 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
         );
       },
       style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? Color(0xFFF4B400) : Color(0xFF0A6E39),
+        backgroundColor: isSelected
+            ? Theme.of(context).colorScheme.secondary
+            : Theme.of(context).colorScheme.primary,
         foregroundColor: isSelected ? Colors.black : Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: isSelected
-              ? BorderSide(color: Color(0xFFF4B400), width: 2)
+              ? BorderSide(
+                  color: Theme.of(context).colorScheme.secondary, width: 2)
               : BorderSide.none,
         ),
         padding: EdgeInsets.symmetric(horizontal: 28, vertical: 18),
@@ -451,7 +465,7 @@ class _ZonaDetalleScreenState extends State<ZonaDetalleScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Zona ${zonaSeleccionada!}'),
-        backgroundColor: Color(0xFF0A6E39),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -467,7 +481,8 @@ class _ZonaDetalleScreenState extends State<ZonaDetalleScreen> {
                 width: MediaQuery.of(context).size.width * 0.85,
                 height: MediaQuery.of(context).size.width * 0.85,
                 decoration: BoxDecoration(
-                  border: Border.all(color: Color(0xFF0A6E39), width: 2),
+                  border: Border.all(
+                      color: Theme.of(context).colorScheme.primary, width: 2),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
@@ -521,7 +536,7 @@ class _ZonaDetalleScreenState extends State<ZonaDetalleScreen> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      color: Color(0xFF0A6E39),
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                   SizedBox(height: 8),
@@ -567,7 +582,7 @@ class _ZonaDetalleScreenState extends State<ZonaDetalleScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: Color(0xFF0A6E39),
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                     SizedBox(height: 8),
@@ -598,7 +613,7 @@ class _ZonaDetalleScreenState extends State<ZonaDetalleScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: Color(0xFF0A6E39),
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                     SizedBox(height: 8),
@@ -642,7 +657,8 @@ class _ZonaDetalleScreenState extends State<ZonaDetalleScreen> {
                         icon: Icon(Icons.arrow_back),
                         label: Text('Regresar'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF0A6E39),
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primary,
                           foregroundColor: Colors.white,
                           padding: EdgeInsets.symmetric(
                               horizontal: 24, vertical: 16),
@@ -690,12 +706,15 @@ class _ZonaDetalleScreenState extends State<ZonaDetalleScreen> {
         _cambiarZona(label);
       },
       style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? colorSecundario : Color(0xFF0A6E39),
+        backgroundColor: isSelected
+            ? Theme.of(context).colorScheme.secondary
+            : Theme.of(context).colorScheme.primary,
         foregroundColor: isSelected ? Colors.black : Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: isSelected
-              ? BorderSide(color: colorSecundario, width: 2)
+              ? BorderSide(
+                  color: Theme.of(context).colorScheme.secondary, width: 2)
               : BorderSide.none,
         ),
         padding: EdgeInsets.symmetric(horizontal: 28, vertical: 18),

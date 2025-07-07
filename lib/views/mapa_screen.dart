@@ -65,7 +65,7 @@ class _MapaScreenState extends State<MapaScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text('Mapa de parqueadero'),
-        backgroundColor: Color(0xFF0A6E39),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         actions: [
           IconButton(
             icon: Icon(Icons.help_outline),
@@ -86,7 +86,7 @@ class _MapaScreenState extends State<MapaScreen>
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF0A6E39),
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -101,8 +101,9 @@ class _MapaScreenState extends State<MapaScreen>
                         height: squareSize - 32,
                         decoration: BoxDecoration(
                           color: Colors.black12,
-                          border:
-                              Border.all(color: Color(0xFF0A6E39), width: 2),
+                          border: Border.all(
+                              color: Theme.of(context).colorScheme.primary,
+                              width: 2),
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
@@ -131,7 +132,8 @@ class _MapaScreenState extends State<MapaScreen>
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.85),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Color(0xFF0A6E39)),
+                            border: Border.all(
+                                color: Theme.of(context).colorScheme.primary),
                           ),
                           child: Text(
                             'Zoom: x${zoomLevel.toStringAsFixed(2)}',
@@ -157,12 +159,16 @@ class _MapaScreenState extends State<MapaScreen>
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     shape: BoxShape.circle,
-                                    border:
-                                        Border.all(color: Color(0xFF0A6E39)),
+                                    border: Border.all(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary),
                                   ),
                                   padding: EdgeInsets.all(8),
                                   child: Icon(Icons.refresh,
-                                      color: Color(0xFF0A6E39)),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary),
                                 ),
                               ),
                             ),
@@ -214,12 +220,15 @@ class _MapaScreenState extends State<MapaScreen>
         });
       },
       style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? Color(0xFFF4B400) : Color(0xFF0A6E39),
+        backgroundColor: isSelected
+            ? Theme.of(context).colorScheme.secondary
+            : Theme.of(context).colorScheme.primary,
         foregroundColor: isSelected ? Colors.black : Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: isSelected
-              ? BorderSide(color: Color(0xFFF4B400), width: 2)
+              ? BorderSide(
+                  color: Theme.of(context).colorScheme.secondary, width: 2)
               : BorderSide.none,
         ),
         padding: EdgeInsets.symmetric(horizontal: 28, vertical: 18),

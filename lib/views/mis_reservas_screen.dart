@@ -158,7 +158,7 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Mis reservas'),
-        backgroundColor: Color(0xFF0A6E39),
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -178,13 +178,14 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 18,
-                                  color: Color(0xFF0A6E39))),
+                                  color:
+                                      Theme.of(context).colorScheme.primary)),
                           Card(
                             color: Colors.green[50],
                             margin: EdgeInsets.symmetric(vertical: 8),
                             child: ListTile(
                               leading: Icon(Icons.directions_car,
-                                  color: Color(0xFF0A6E39)),
+                                  color: Theme.of(context).colorScheme.primary),
                               title: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -242,7 +243,7 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
-                            color: Color(0xFF0A6E39))),
+                            color: Theme.of(context).colorScheme.primary)),
                   ),
                   if (reservasFuturas.isEmpty)
                     Center(child: Text('No tienes reservas futuras.'))
@@ -253,7 +254,7 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
                         margin: EdgeInsets.symmetric(vertical: 8),
                         child: ListTile(
                           leading: Icon(Icons.directions_car,
-                              color: Color(0xFF0A6E39)),
+                              color: Theme.of(context).colorScheme.primary),
                           title: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [

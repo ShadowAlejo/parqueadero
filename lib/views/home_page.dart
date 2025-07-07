@@ -99,7 +99,9 @@ class _HomePageState extends State<HomePage> {
                                   style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
-                                      color: Color(0xFF0A6E39)),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary),
                                 ),
                                 SizedBox(height: 6),
                                 Row(
@@ -210,7 +212,7 @@ class _HomePageState extends State<HomePage> {
       },
       style: ElevatedButton.styleFrom(
         padding: EdgeInsets.all(16),
-        backgroundColor: Color(0xFF0A6E39),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       child: Column(

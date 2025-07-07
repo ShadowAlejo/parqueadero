@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme.dart';
 
 class ConfiguracionScreen extends StatelessWidget {
   @override
@@ -6,7 +7,7 @@ class ConfiguracionScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Configuración'),
-        backgroundColor: Color(0xFF0A6E39),
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -28,7 +29,8 @@ class ConfiguracionScreen extends StatelessWidget {
                     right: 0,
                     child: CircleAvatar(
                       backgroundColor: Colors.white,
-                      child: Icon(Icons.edit, color: Color(0xFF0A6E39)),
+                      child: Icon(Icons.edit,
+                          color: Theme.of(context).colorScheme.primary),
                     ),
                   ),
                 ],
@@ -58,7 +60,7 @@ class ConfiguracionScreen extends StatelessWidget {
               icon: Icon(Icons.lock_reset),
               label: Text('Cambiar contraseña'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF0A6E39),
+                backgroundColor: Theme.of(context).colorScheme.primary,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
               ),
@@ -100,8 +102,8 @@ class ConfiguracionScreen extends StatelessWidget {
                 icon: Icon(Icons.info_outline),
                 label: Text('Información'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[200],
-                  foregroundColor: Color(0xFF0A6E39),
+                  backgroundColor: AppColors.primarySoft,
+                  foregroundColor: Theme.of(context).colorScheme.primary,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),

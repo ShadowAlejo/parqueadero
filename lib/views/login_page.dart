@@ -34,7 +34,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF5F5F5),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: 24),
@@ -51,7 +51,7 @@ class _LoginPageState extends State<LoginPage> {
                 style: GoogleFonts.roboto(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF0A6E39),
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
               SizedBox(height: 20),
@@ -175,7 +175,8 @@ class _LoginPageState extends State<LoginPage> {
                             isRegister
                                 ? '¿Ya tienes cuenta? Inicia sesión'
                                 : '¿No tienes cuenta? Regístrate',
-                            style: TextStyle(color: Color(0xFF0A6E39)),
+                            style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary),
                           ),
                         )
                       ],
