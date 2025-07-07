@@ -912,6 +912,50 @@ class ConfiguracionScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12)),
               ),
             ),
+            SizedBox(height: 32),
+            Center(
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text('Acerca de la aplicación'),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text('Parqueadero ESPE', textAlign: TextAlign.center),
+                          SizedBox(height: 8),
+                          Text('Versión: 1.0.0', textAlign: TextAlign.center),
+                          SizedBox(height: 8),
+                          Text('Desarrollado por Equipo Moviles 2025',
+                              textAlign: TextAlign.center),
+                          SizedBox(height: 8),
+                          Text('© Xriva 21',
+                              textAlign: TextAlign.center,
+                              style:
+                                  TextStyle(fontSize: 12, color: Colors.grey)),
+                        ],
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text('Cerrar'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                icon: Icon(Icons.info_outline),
+                label: Text('Información'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey[200],
+                  foregroundColor: Color(0xFF0A6E39),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
           ],
         ),
       ),
