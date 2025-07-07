@@ -69,8 +69,88 @@ class _HomePageState extends State<HomePage> {
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   SizedBox(height: 16),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                    elevation: 4,
+                    color: Colors.green[50],
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 20, horizontal: 16),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 36,
+                            backgroundImage:
+                                AssetImage('assets/images/logo_app.png'),
+                          ),
+                          SizedBox(width: 20),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  usuario!.nombre,
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                      color: Color(0xFF0A6E39)),
+                                ),
+                                SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    Icon(Icons.pending_actions,
+                                        color: Colors.orange, size: 20),
+                                    SizedBox(width: 4),
+                                    Text('Reservas pendientes: ',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w500)),
+                                    Text('2',
+                                        style: TextStyle(
+                                            color: Colors.orange[800],
+                                            fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                                SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(Icons.check_circle,
+                                        color: Colors.green, size: 20),
+                                    SizedBox(width: 4),
+                                    Text('Reservas confirmadas: ',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w500)),
+                                    Text('4',
+                                        style: TextStyle(
+                                            color: Colors.green[800],
+                                            fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                                SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(Icons.payments,
+                                        color: Colors.blue, size: 20),
+                                    SizedBox(width: 4),
+                                    Text('Próximo pago: ',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w500)),
+                                    Text('15/06/2024',
+                                        style: TextStyle(
+                                            color: Colors.blue[800],
+                                            fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 24),
                   Text(
-                    'Selecciona una opción:',
+                    'Seleccione una opción:',
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                   SizedBox(height: 30),
