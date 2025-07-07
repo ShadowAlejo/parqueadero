@@ -76,7 +76,13 @@ class _HomePageState extends State<HomePage> {
   Widget _buildMenuButton(IconData icon, String label) {
     return ElevatedButton(
       onPressed: () {
-        // Navegación futura
+        if (label == 'Ver disponibilidad') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => MapaScreen()),
+          );
+        }
+        // Aquí puedes agregar otras navegaciones para otros botones si lo deseas
       },
       style: ElevatedButton.styleFrom(
         padding: EdgeInsets.all(16),
@@ -90,6 +96,120 @@ class _HomePageState extends State<HomePage> {
           SizedBox(height: 10),
           Text(label, textAlign: TextAlign.center),
         ],
+      ),
+    );
+  }
+}
+
+class MapaScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final squareSize = screenWidth < screenHeight ? screenWidth : screenHeight;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Mapa de ESPE - Belisario Quevedo'),
+        backgroundColor: Color(0xFF0A6E39),
+      ),
+      body: Column(
+        children: [
+          SizedBox(height: 16),
+          Text(
+            'Mapa de parqueadero',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF0A6E39),
+            ),
+          ),
+          SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Center(
+              child: Container(
+                width: squareSize - 32,
+                height: squareSize - 32,
+                decoration: BoxDecoration(
+                  color: Colors.black12,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Color(0xFF0A6E39), width: 2),
+                ),
+                child: _ZoomOnlyImageViewer(squareSize: squareSize - 32),
+              ),
+            ),
+          ),
+          SizedBox(height: 24),
+          Text(
+            'Seleccione una zona:',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+          ),
+          SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 32.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _zonaButton('A'),
+                SizedBox(width: 16),
+                _zonaButton('B'),
+                SizedBox(width: 16),
+                _zonaButton('C'),
+                SizedBox(width: 16),
+                _zonaButton('D'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _zonaButton(String label) {
+    return ElevatedButton(
+      onPressed: () {
+        // Acción para cada zona (A, B, C, D) si se requiere
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Color(0xFF0A6E39),
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: EdgeInsets.symmetric(horizontal: 28, vertical: 18),
+        elevation: 4,
+      ),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+}
+
+class _ZoomOnlyImageViewer extends StatelessWidget {
+  final double squareSize;
+  const _ZoomOnlyImageViewer({required this.squareSize});
+
+  @override
+  Widget build(BuildContext context) {
+    return InteractiveViewer(
+      minScale: 1.0,
+      maxScale: 4.0,
+      panEnabled: false, // Solo zoom, sin desplazamiento
+      scaleEnabled: true,
+      constrained: true,
+      child: SizedBox(
+        width: squareSize,
+        height: squareSize,
+        child: Image.asset(
+          'assets/images/mapa.png',
+          fit: BoxFit.cover,
+        ),
       ),
     );
   }
