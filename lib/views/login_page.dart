@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../controllers/auth_controller.dart';
 import '../models/usuario.dart';
+import '../theme.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -34,7 +35,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF5F5F5),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: 24),
@@ -51,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
                 style: GoogleFonts.roboto(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF0A6E39),
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               SizedBox(height: 20),
@@ -165,6 +166,11 @@ class _LoginPageState extends State<LoginPage> {
                           child: Text(isRegister ? 'Registrar' : 'Ingresar'),
                           style: ElevatedButton.styleFrom(
                             minimumSize: Size(double.infinity, 48),
+                            backgroundColor:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? AppColors.primary
+                                    : Theme.of(context).colorScheme.primary,
+                            foregroundColor: Colors.white,
                           ),
                         ),
                         SizedBox(height: 12),
@@ -175,7 +181,13 @@ class _LoginPageState extends State<LoginPage> {
                             isRegister
                                 ? '¿Ya tienes cuenta? Inicia sesión'
                                 : '¿No tienes cuenta? Regístrate',
-                            style: TextStyle(color: Color(0xFF0A6E39)),
+                            style: TextStyle(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.primary
+                                  : Theme.of(context).colorScheme.primary,
+                              decoration: TextDecoration.underline,
+                            ),
                           ),
                         )
                       ],

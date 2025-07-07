@@ -159,7 +159,6 @@ analyzer:
     no_runtimeType_toString: ignore
     non_constant_identifier_names: ignore
     null_closures: ignore
-    null_in_if_null_operators: ignore
     omit_local_variable_types: ignore
     one_member_abstracts: ignore
     only_throw_errors: ignore
