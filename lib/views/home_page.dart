@@ -33,7 +33,26 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: () async {
-              await _authC.logout();
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text('Cerrar sesión'),
+                  content: Text('¿Estás seguro de que deseas cerrar sesión?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text('No'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: Text('Sí, cerrar sesión'),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm == true) {
+                await _authC.logout();
+              }
             },
           )
         ],
@@ -61,10 +80,8 @@ class _HomePageState extends State<HomePage> {
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
                     children: [
-                      _buildMenuButton(
-                          Icons.calendar_today, 'Reservar espacio'),
-                      _buildMenuButton(Icons.cancel, 'Cancelar reserva'),
                       _buildMenuButton(Icons.map, 'Ver disponibilidad'),
+                      _buildMenuButton(Icons.bookmark, 'Mis reservas'),
                       if (usuario!.rol == 'admin')
                         _buildMenuButton(Icons.analytics, 'Ver reportes'),
                     ],
@@ -82,6 +99,12 @@ class _HomePageState extends State<HomePage> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => MapaParqueaderoScreen()),
+          );
+        }
+        if (label == 'Mis reservas') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => MisReservasScreen()),
           );
         }
         // Aquí puedes agregar otras navegaciones para otros botones si lo deseas
@@ -300,74 +323,6 @@ class _MapaScreenState extends State<MapaScreen>
                   ],
                 ),
               ),
-              // Sección de datos de reserva inventados
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24.0, 8.0, 24.0, 32.0),
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Color(0xFFF4F6F8),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Color(0xFF0A6E39), width: 1),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 6,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Reserva actual',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: Color(0xFF0A6E39),
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(Icons.directions_car, color: Color(0xFF0A6E39)),
-                          SizedBox(width: 8),
-                          Text('Espacio: B-12', style: TextStyle(fontSize: 15)),
-                        ],
-                      ),
-                      SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.access_time, color: Color(0xFF0A6E39)),
-                          SizedBox(width: 8),
-                          Text('Hora de entrada: 08:30',
-                              style: TextStyle(fontSize: 15)),
-                        ],
-                      ),
-                      SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.date_range, color: Color(0xFF0A6E39)),
-                          SizedBox(width: 8),
-                          Text('Fecha: 2024-06-10',
-                              style: TextStyle(fontSize: 15)),
-                        ],
-                      ),
-                      SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.check_circle, color: Colors.green),
-                          SizedBox(width: 8),
-                          Text('Estado: Confirmada',
-                              style: TextStyle(fontSize: 15)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ],
           ),
         ),
@@ -468,6 +423,338 @@ class _ZoomOnlyImageViewerState extends State<_ZoomOnlyImageViewer> {
         child: Image.asset(
           'assets/images/mapa.png',
           fit: BoxFit.cover,
+        ),
+      ),
+    );
+  }
+}
+
+// Pantalla de Mis Reservas
+class MisReservasScreen extends StatefulWidget {
+  @override
+  State<MisReservasScreen> createState() => _MisReservasScreenState();
+}
+
+class _ReservaData {
+  String zona;
+  String espacio;
+  DateTime fecha;
+  String horario;
+  String estado; // 'actual', 'futura', 'pasada'
+  _ReservaData(
+      {required this.zona,
+      required this.espacio,
+      required this.fecha,
+      required this.horario,
+      required this.estado});
+}
+
+class _MisReservasScreenState extends State<MisReservasScreen> {
+  List<_ReservaData> reservas = [
+    _ReservaData(
+      zona: 'B',
+      espacio: 'B-12',
+      fecha: DateTime.now(),
+      horario: '08:30 - 10:00',
+      estado: 'actual',
+    ),
+    _ReservaData(
+      zona: 'A',
+      espacio: 'A-2',
+      fecha: DateTime.now().add(Duration(days: 1)),
+      horario: '10:00 - 11:00',
+      estado: 'futura',
+    ),
+    _ReservaData(
+      zona: 'C',
+      espacio: 'C-5',
+      fecha: DateTime.now().add(Duration(days: 2)),
+      horario: '12:00 - 13:00',
+      estado: 'futura',
+    ),
+    _ReservaData(
+      zona: 'D',
+      espacio: 'D-8',
+      fecha: DateTime.now().add(Duration(days: 3)),
+      horario: '09:00 - 10:00',
+      estado: 'futura',
+    ),
+    _ReservaData(
+      zona: 'A',
+      espacio: 'A-4',
+      fecha: DateTime.now().add(Duration(days: 4)),
+      horario: '13:00 - 14:00',
+      estado: 'futura',
+    ),
+    _ReservaData(
+      zona: 'B',
+      espacio: 'B-15',
+      fecha: DateTime.now().add(Duration(days: 5)),
+      horario: '11:00 - 12:00',
+      estado: 'futura',
+    ),
+  ];
+
+  final List<String> horarios = [
+    '08:00 - 09:00',
+    '09:00 - 10:00',
+    '10:00 - 11:00',
+    '11:00 - 12:00',
+    '12:00 - 13:00',
+    '13:00 - 14:00',
+  ];
+
+  void _cancelarReserva(int index) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Cancelar reserva'),
+        content: Text('¿Estás seguro de que deseas cancelar esta reserva?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('No'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('Sí, cancelar'),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      setState(() {
+        reservas.removeAt(index);
+      });
+    }
+  }
+
+  void _cambiarFecha(int index) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: reservas[index].fecha,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(Duration(days: 30)),
+    );
+    if (picked != null) {
+      setState(() {
+        reservas[index].fecha = picked;
+      });
+    }
+  }
+
+  void _cambiarHorario(int index) async {
+    String? nuevoHorario = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        String? selected = reservas[index].horario;
+        return AlertDialog(
+          title: Text('Seleccionar horario'),
+          content: DropdownButton<String>(
+            value: selected,
+            isExpanded: true,
+            items: horarios
+                .map((h) => DropdownMenuItem(value: h, child: Text(h)))
+                .toList(),
+            onChanged: (value) {
+              selected = value;
+              Navigator.of(context).pop(value);
+            },
+          ),
+        );
+      },
+    );
+    if (nuevoHorario != null) {
+      setState(() {
+        reservas[index].horario = nuevoHorario;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final reservasFuturas =
+        reservas.where((r) => r.estado == 'futura').toList();
+    final reservaActual = reservas.firstWhere(
+      (r) => r.estado == 'actual',
+      orElse: () => _ReservaData(
+          zona: '',
+          espacio: '',
+          fecha: DateTime.now(),
+          horario: '',
+          estado: 'ninguna'),
+    );
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Mis reservas'),
+        backgroundColor: Color(0xFF0A6E39),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: ListView(
+                children: [
+                  if (reservaActual.estado == 'actual') ...[
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 18.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Reserva actual',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                  color: Color(0xFF0A6E39))),
+                          Card(
+                            color: Colors.green[50],
+                            margin: EdgeInsets.symmetric(vertical: 8),
+                            child: ListTile(
+                              leading: Icon(Icons.directions_car,
+                                  color: Color(0xFF0A6E39)),
+                              title: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text.rich(TextSpan(children: [
+                                    TextSpan(
+                                        text: 'Zona: ',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    TextSpan(text: reservaActual.zona),
+                                  ])),
+                                  Text.rich(TextSpan(children: [
+                                    TextSpan(
+                                        text: 'Espacio: ',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    TextSpan(text: reservaActual.espacio),
+                                  ])),
+                                  Text.rich(TextSpan(children: [
+                                    TextSpan(
+                                        text: 'Fecha: ',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    TextSpan(
+                                        text:
+                                            '${reservaActual.fecha.day.toString().padLeft(2, '0')}/${reservaActual.fecha.month.toString().padLeft(2, '0')}/${reservaActual.fecha.year}'),
+                                  ])),
+                                  Text.rich(TextSpan(children: [
+                                    TextSpan(
+                                        text: 'Horario: ',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    TextSpan(text: reservaActual.horario),
+                                  ])),
+                                  Text.rich(TextSpan(children: [
+                                    TextSpan(
+                                        text: 'Estado: ',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    TextSpan(
+                                        text: 'Confirmada',
+                                        style: TextStyle(color: Colors.green)),
+                                  ])),
+                                ],
+                              ),
+                              trailing: Icon(Icons.lock, color: Colors.grey),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Text('Próximas reservas',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: Color(0xFF0A6E39))),
+                  ),
+                  if (reservasFuturas.isEmpty)
+                    Center(child: Text('No tienes reservas futuras.'))
+                  else
+                    ...reservasFuturas.map((r) {
+                      final idx = reservas.indexOf(r);
+                      return Card(
+                        margin: EdgeInsets.symmetric(vertical: 8),
+                        child: ListTile(
+                          leading: Icon(Icons.directions_car,
+                              color: Color(0xFF0A6E39)),
+                          title: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text.rich(TextSpan(children: [
+                                TextSpan(
+                                    text: 'Zona: ',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)),
+                                TextSpan(text: r.zona),
+                              ])),
+                              Text.rich(TextSpan(children: [
+                                TextSpan(
+                                    text: 'Espacio: ',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)),
+                                TextSpan(text: r.espacio),
+                              ])),
+                              Text.rich(TextSpan(children: [
+                                TextSpan(
+                                    text: 'Fecha: ',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)),
+                                TextSpan(
+                                    text:
+                                        '${r.fecha.day.toString().padLeft(2, '0')}/${r.fecha.month.toString().padLeft(2, '0')}/${r.fecha.year}'),
+                              ])),
+                              Text.rich(TextSpan(children: [
+                                TextSpan(
+                                    text: 'Horario: ',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)),
+                                TextSpan(text: r.horario),
+                              ])),
+                              Text.rich(TextSpan(children: [
+                                TextSpan(
+                                    text: 'Estado: ',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)),
+                                TextSpan(
+                                    text: 'Confirmada',
+                                    style: TextStyle(color: Colors.green)),
+                              ])),
+                            ],
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.edit_calendar,
+                                    color: Colors.orange),
+                                tooltip: 'Cambiar fecha',
+                                onPressed: () => _cambiarFecha(idx),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.schedule, color: Colors.blue),
+                                tooltip: 'Cambiar horario',
+                                onPressed: () => _cambiarHorario(idx),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.cancel, color: Colors.red),
+                                tooltip: 'Cancelar reserva',
+                                onPressed: () => _cancelarReserva(idx),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -593,32 +593,34 @@ class _ZonaDetalleScreenState extends State<ZonaDetalleScreen> {
                       Text('No hay espacios disponibles para esta fecha.'),
                     SizedBox(height: 24),
                   ],
-                  Text(
-                    'Seleccione un horario:',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Color(0xFF0A6E39),
+                  if (espacioSeleccionado != null) ...[
+                    Text(
+                      'Seleccione un horario:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Color(0xFF0A6E39),
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 8),
-                  DropdownButton<String>(
-                    value: horarioSeleccionado,
-                    hint: Text('Seleccione un horario'),
-                    isExpanded: true,
-                    items: horarios
-                        .map((h) => DropdownMenuItem(
-                              value: h,
-                              child: Text(h),
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        horarioSeleccionado = value;
-                      });
-                    },
-                  ),
-                  SizedBox(height: 32),
+                    SizedBox(height: 8),
+                    DropdownButton<String>(
+                      value: horarioSeleccionado,
+                      hint: Text('Seleccione un horario'),
+                      isExpanded: true,
+                      items: horarios
+                          .map((h) => DropdownMenuItem(
+                                value: h,
+                                child: Text(h),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          horarioSeleccionado = value;
+                        });
+                      },
+                    ),
+                    SizedBox(height: 32),
+                  ],
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
