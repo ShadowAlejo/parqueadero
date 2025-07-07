@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../controllers/auth_controller.dart';
 import '../models/usuario.dart';
+import 'mapa_panel.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -63,6 +64,27 @@ class _HomePageState extends State<HomePage> {
                           Icons.calendar_today, 'Reservar espacio'),
                       _buildMenuButton(Icons.cancel, 'Cancelar reserva'),
                       _buildMenuButton(Icons.map, 'Ver disponibilidad'),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => MapaPanel()),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.all(16),
+                          backgroundColor: Color(0xFF0A6E39),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.map_outlined, size: 40),
+                            SizedBox(height: 10),
+                            Text('Mapa del Parqueadero', textAlign: TextAlign.center),
+                          ],
+                        ),
+                      ),
                       if (usuario!.rol == 'admin')
                         _buildMenuButton(Icons.analytics, 'Ver reportes'),
                     ],
