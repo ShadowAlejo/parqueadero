@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme.dart';
+import '../main.dart';
 
 class ConfiguracionScreen extends StatelessWidget {
   @override
@@ -37,32 +38,72 @@ class ConfiguracionScreen extends StatelessWidget {
               ),
             ),
             SizedBox(height: 32),
-            Text('Cambiar contraseña',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            SizedBox(height: 12),
-            ElevatedButton.icon(
-              onPressed: () {
-                // Aquí iría la lógica para cambiar contraseña
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text('Cambiar contraseña'),
-                    content: Text('Funcionalidad próximamente disponible.'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: Text('OK'),
+            Card(
+              color: Theme.of(context).cardColor,
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 18.0, horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        // Aquí iría la lógica para ajustes
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text('Ajustes'),
+                            content:
+                                Text('Funcionalidad próximamente disponible.'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text('OK'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      icon: Icon(Icons.settings),
+                      label: Text('Ajustes'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                    ],
-                  ),
-                );
-              },
-              icon: Icon(Icons.lock_reset),
-              label: Text('Cambiar contraseña'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                    ),
+                    SizedBox(height: 16),
+                    ValueListenableBuilder<ThemeMode>(
+                      valueListenable: themeModeNotifier,
+                      builder: (context, mode, _) {
+                        final isDark = mode == ThemeMode.dark;
+                        return ElevatedButton.icon(
+                          onPressed: () {
+                            themeModeNotifier.value =
+                                isDark ? ThemeMode.light : ThemeMode.dark;
+                          },
+                          icon:
+                              Icon(isDark ? Icons.dark_mode : Icons.light_mode),
+                          label: Text(isDark
+                              ? 'Tema oscuro activado'
+                              : 'Tema claro activado'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                Theme.of(context).colorScheme.primary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
             SizedBox(height: 32),
@@ -101,12 +142,7 @@ class ConfiguracionScreen extends StatelessWidget {
                 },
                 icon: Icon(Icons.info_outline),
                 label: Text('Información'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primarySoft,
-                  foregroundColor: Theme.of(context).colorScheme.primary,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
+                style: infoButtonStyle,
               ),
             ),
           ],

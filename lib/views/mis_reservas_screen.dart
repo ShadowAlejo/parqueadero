@@ -179,13 +179,18 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
                                   fontWeight: FontWeight.bold,
                                   fontSize: 18,
                                   color:
-                                      Theme.of(context).colorScheme.primary)),
+                                      Theme.of(context).colorScheme.onSurface)),
                           Card(
-                            color: Colors.green[50],
+                            color: Theme.of(context).cardColor,
                             margin: EdgeInsets.symmetric(vertical: 8),
                             child: ListTile(
-                              leading: Icon(Icons.directions_car,
-                                  color: Theme.of(context).colorScheme.primary),
+                              leading: Icon(
+                                Icons.directions_car,
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.lightBlueAccent[100]
+                                    : Theme.of(context).colorScheme.primary,
+                              ),
                               title: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -193,44 +198,87 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
                                     TextSpan(
                                         text: 'Zona: ',
                                         style: TextStyle(
-                                            fontWeight: FontWeight.bold)),
-                                    TextSpan(text: reservaActual.zona),
+                                            fontWeight: FontWeight.bold,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface)),
+                                    TextSpan(
+                                        text: reservaActual.zona,
+                                        style: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface)),
                                   ])),
                                   Text.rich(TextSpan(children: [
                                     TextSpan(
                                         text: 'Espacio: ',
                                         style: TextStyle(
-                                            fontWeight: FontWeight.bold)),
-                                    TextSpan(text: reservaActual.espacio),
+                                            fontWeight: FontWeight.bold,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface)),
+                                    TextSpan(
+                                        text: reservaActual.espacio,
+                                        style: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface)),
                                   ])),
                                   Text.rich(TextSpan(children: [
                                     TextSpan(
                                         text: 'Fecha: ',
                                         style: TextStyle(
-                                            fontWeight: FontWeight.bold)),
+                                            fontWeight: FontWeight.bold,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface)),
                                     TextSpan(
                                         text:
-                                            '${reservaActual.fecha.day.toString().padLeft(2, '0')}/${reservaActual.fecha.month.toString().padLeft(2, '0')}/${reservaActual.fecha.year}'),
+                                            '${reservaActual.fecha.day.toString().padLeft(2, '0')}/${reservaActual.fecha.month.toString().padLeft(2, '0')}/${reservaActual.fecha.year}',
+                                        style: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface)),
                                   ])),
                                   Text.rich(TextSpan(children: [
                                     TextSpan(
                                         text: 'Horario: ',
                                         style: TextStyle(
-                                            fontWeight: FontWeight.bold)),
-                                    TextSpan(text: reservaActual.horario),
+                                            fontWeight: FontWeight.bold,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface)),
+                                    TextSpan(
+                                        text: reservaActual.horario,
+                                        style: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface)),
                                   ])),
                                   Text.rich(TextSpan(children: [
                                     TextSpan(
                                         text: 'Estado: ',
                                         style: TextStyle(
-                                            fontWeight: FontWeight.bold)),
+                                            fontWeight: FontWeight.bold,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface)),
                                     TextSpan(
                                         text: 'Confirmada',
-                                        style: TextStyle(color: Colors.green)),
+                                        style: TextStyle(
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                        Brightness.dark
+                                                    ? Colors.greenAccent[100]
+                                                    : Colors.green)),
                                   ])),
                                 ],
                               ),
-                              trailing: Icon(Icons.lock, color: Colors.grey),
+                              trailing: Icon(Icons.lock,
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white54
+                                      : Colors.grey),
                             ),
                           ),
                         ],
@@ -243,7 +291,7 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
-                            color: Theme.of(context).colorScheme.primary)),
+                            color: Theme.of(context).colorScheme.onSurface)),
                   ),
                   if (reservasFuturas.isEmpty)
                     Center(child: Text('No tienes reservas futuras.'))
@@ -253,8 +301,13 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
                       return Card(
                         margin: EdgeInsets.symmetric(vertical: 8),
                         child: ListTile(
-                          leading: Icon(Icons.directions_car,
-                              color: Theme.of(context).colorScheme.primary),
+                          leading: Icon(
+                            Icons.directions_car,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.lightBlueAccent[100]
+                                    : Theme.of(context).colorScheme.primary,
+                          ),
                           title: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [

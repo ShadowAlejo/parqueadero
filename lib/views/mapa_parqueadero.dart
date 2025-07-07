@@ -64,7 +64,7 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
     final squareSize = screenWidth < screenHeight ? screenWidth : screenHeight;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Mapa de parqueadero'),
+        title: Text('Disponibilidad'),
         backgroundColor: Theme.of(context).colorScheme.primary,
         actions: [
           IconButton(
@@ -85,14 +85,14 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.location_on,
-                      color: Theme.of(context).colorScheme.primary),
+                      color: Theme.of(context).colorScheme.onSurface),
                   SizedBox(width: 6),
                   Text(
                     'ESPE - Belisario Quevedo',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ],
@@ -137,7 +137,15 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
                           padding:
                               EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.85),
+                            color: zonaSeleccionada == null
+                                ? (Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.grey[900]?.withOpacity(0.85)
+                                    : Colors.grey[800]?.withOpacity(0.85))
+                                : (Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.grey[300]?.withOpacity(0.85)
+                                    : Colors.grey[900]?.withOpacity(0.85)),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                                 color: Theme.of(context).colorScheme.primary),
@@ -145,7 +153,13 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
                           child: Text(
                             'Zoom: x${zoomLevel.toStringAsFixed(2)}',
                             style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 13),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              color: Theme.of(context).brightness ==
+                                      Brightness.light
+                                  ? Colors.white
+                                  : Theme.of(context).colorScheme.onSurface,
+                            ),
                           ),
                         ),
                       ),
@@ -190,7 +204,7 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
-                  color: Colors.black87,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -216,7 +230,7 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Color(0xFFF4F6F8),
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                         color: Theme.of(context).colorScheme.primary, width: 1),
@@ -237,45 +251,71 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
-                          color: Theme.of(context).colorScheme.primary,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                       SizedBox(height: 8),
                       Row(
                         children: [
                           Icon(Icons.directions_car,
-                              color: Theme.of(context).colorScheme.primary),
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.lightBlueAccent[100]
+                                  : Theme.of(context).colorScheme.primary),
                           SizedBox(width: 8),
-                          Text('Espacio: B-12', style: TextStyle(fontSize: 15)),
+                          Text('Espacio: B-12',
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              )),
                         ],
                       ),
                       SizedBox(height: 4),
                       Row(
                         children: [
                           Icon(Icons.access_time,
-                              color: Theme.of(context).colorScheme.primary),
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.amber[200]
+                                  : Theme.of(context).colorScheme.primary),
                           SizedBox(width: 8),
                           Text('Hora de entrada: 08:30',
-                              style: TextStyle(fontSize: 15)),
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              )),
                         ],
                       ),
                       SizedBox(height: 4),
                       Row(
                         children: [
                           Icon(Icons.date_range,
-                              color: Theme.of(context).colorScheme.primary),
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.purple[200]
+                                  : Theme.of(context).colorScheme.primary),
                           SizedBox(width: 8),
                           Text('Fecha: 2024-06-10',
-                              style: TextStyle(fontSize: 15)),
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              )),
                         ],
                       ),
                       SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(Icons.check_circle, color: Colors.green),
+                          Icon(Icons.check_circle,
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.greenAccent[100]
+                                  : Colors.green),
                           SizedBox(width: 8),
                           Text('Estado: Confirmada',
-                              style: TextStyle(fontSize: 15)),
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              )),
                         ],
                       ),
                     ],
@@ -303,22 +343,35 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: isSelected
-            ? Theme.of(context).colorScheme.secondary
+            ? (Theme.of(context).brightness == Brightness.dark
+                ? Colors.grey[850]
+                : Colors.grey[800])
             : Theme.of(context).colorScheme.primary,
-        foregroundColor: isSelected ? Colors.black : Colors.white,
+        foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: isSelected
               ? BorderSide(
-                  color: Theme.of(context).colorScheme.secondary, width: 2)
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey[700]!
+                      : Colors.grey[900]!),
+                  width: 2)
               : BorderSide.none,
         ),
         padding: EdgeInsets.symmetric(horizontal: 28, vertical: 18),
-        elevation: isSelected ? 8 : 4,
+        elevation: isSelected ? 16 : 4,
+        shadowColor: isSelected
+            ? (Theme.of(context).brightness == Brightness.dark
+                ? Colors.grey[700]!.withOpacity(0.7)
+                : Colors.grey[900]!.withOpacity(0.7))
+            : Colors.black.withOpacity(0.2),
       ),
       child: Text(
         label,
-        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
       ),
     );
   }
@@ -507,7 +560,7 @@ class _ZonaDetalleScreenState extends State<ZonaDetalleScreen> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w500,
-                color: Colors.black87,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
               textAlign: TextAlign.center,
             ),
@@ -536,7 +589,7 @@ class _ZonaDetalleScreenState extends State<ZonaDetalleScreen> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   SizedBox(height: 8),
@@ -582,7 +635,7 @@ class _ZonaDetalleScreenState extends State<ZonaDetalleScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     SizedBox(height: 8),
@@ -613,7 +666,7 @@ class _ZonaDetalleScreenState extends State<ZonaDetalleScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     SizedBox(height: 8),
@@ -707,22 +760,35 @@ class _ZonaDetalleScreenState extends State<ZonaDetalleScreen> {
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: isSelected
-            ? Theme.of(context).colorScheme.secondary
+            ? (Theme.of(context).brightness == Brightness.dark
+                ? Colors.grey[850]
+                : Colors.grey[800])
             : Theme.of(context).colorScheme.primary,
-        foregroundColor: isSelected ? Colors.black : Colors.white,
+        foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: isSelected
               ? BorderSide(
-                  color: Theme.of(context).colorScheme.secondary, width: 2)
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey[700]!
+                      : Colors.grey[900]!),
+                  width: 2)
               : BorderSide.none,
         ),
         padding: EdgeInsets.symmetric(horizontal: 28, vertical: 18),
-        elevation: isSelected ? 8 : 4,
+        elevation: isSelected ? 16 : 4,
+        shadowColor: isSelected
+            ? (Theme.of(context).brightness == Brightness.dark
+                ? Colors.grey[700]!.withOpacity(0.7)
+                : Colors.grey[900]!.withOpacity(0.7))
+            : Colors.black.withOpacity(0.2),
       ),
       child: Text(
         label,
-        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
       ),
     );
   }

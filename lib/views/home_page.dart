@@ -33,7 +33,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Inicio - Parqueadero ESPE'),
+        title: Text('Inicio'),
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
@@ -78,7 +78,7 @@ class _HomePageState extends State<HomePage> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16)),
                     elevation: 4,
-                    color: Colors.green[50],
+                    color: Theme.of(context).cardColor,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                           vertical: 20, horizontal: 16),
@@ -96,25 +96,44 @@ class _HomePageState extends State<HomePage> {
                               children: [
                                 Text(
                                   usuario!.nombre,
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primary),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface,
+                                      ),
                                 ),
                                 SizedBox(height: 6),
                                 Row(
                                   children: [
                                     Icon(Icons.pending_actions,
-                                        color: Colors.orange, size: 20),
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.orange[300]
+                                            : Colors.orange,
+                                        size: 20),
                                     SizedBox(width: 4),
                                     Text('Reservas pendientes: ',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.w500)),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w500,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface,
+                                            )),
                                     Text('2',
                                         style: TextStyle(
-                                            color: Colors.orange[800],
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                        Brightness.dark
+                                                    ? Colors.orange[200]
+                                                    : Colors.orange[800],
                                             fontWeight: FontWeight.bold)),
                                   ],
                                 ),
@@ -122,14 +141,29 @@ class _HomePageState extends State<HomePage> {
                                 Row(
                                   children: [
                                     Icon(Icons.check_circle,
-                                        color: Colors.green, size: 20),
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.greenAccent[200]
+                                            : Colors.green,
+                                        size: 20),
                                     SizedBox(width: 4),
                                     Text('Reservas confirmadas: ',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.w500)),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w500,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface,
+                                            )),
                                     Text('4',
                                         style: TextStyle(
-                                            color: Colors.green[800],
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                        Brightness.dark
+                                                    ? Colors.greenAccent[100]
+                                                    : Colors.green[800],
                                             fontWeight: FontWeight.bold)),
                                   ],
                                 ),
@@ -137,14 +171,29 @@ class _HomePageState extends State<HomePage> {
                                 Row(
                                   children: [
                                     Icon(Icons.local_parking,
-                                        color: Colors.blue, size: 20),
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.lightBlueAccent[100]
+                                            : Colors.blue,
+                                        size: 20),
                                     SizedBox(width: 4),
                                     Text('Código: ',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.w500)),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w500,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface,
+                                            )),
                                     Text('ESPE-1234',
                                         style: TextStyle(
-                                            color: Colors.blue[800],
+                                            color: Theme.of(context)
+                                                        .brightness ==
+                                                    Brightness.dark
+                                                ? Colors.lightBlueAccent[100]
+                                                : Colors.blue[800],
                                             fontWeight: FontWeight.bold)),
                                   ],
                                 ),
@@ -167,12 +216,12 @@ class _HomePageState extends State<HomePage> {
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
                     children: [
-                      _buildMenuButton(Icons.map, 'Ver disponibilidad'),
+                      _buildMenuButton(Icons.map, 'Disponibilidad'),
                       _buildMenuButton(Icons.bookmark, 'Mis reservas'),
                       if (usuario!.rol == 'admin')
                         _buildMenuButton(Icons.analytics, 'Ver reportes'),
                       _buildMenuButton(Icons.settings, 'Configuración'),
-                      _buildMenuButton(Icons.directions_car, 'Datos'),
+                      _buildMenuButton(Icons.directions_car, 'Vehículos'),
                     ],
                   ),
                 ],
@@ -184,7 +233,7 @@ class _HomePageState extends State<HomePage> {
   Widget _buildMenuButton(IconData icon, String label) {
     return ElevatedButton(
       onPressed: () {
-        if (label == 'Ver disponibilidad') {
+        if (label == 'Disponibilidad') {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => MapaParqueaderoScreen()),
@@ -202,7 +251,7 @@ class _HomePageState extends State<HomePage> {
             MaterialPageRoute(builder: (context) => ConfiguracionScreen()),
           );
         }
-        if (label == 'Datos') {
+        if (label == 'Vehículos') {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => DatosVehicularesScreen()),

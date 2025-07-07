@@ -75,3 +75,80 @@ final ThemeData appTheme = ThemeData(
   ),
   cardColor: AppColors.primarySoft,
 );
+
+// Estilo para botones secundarios (informativos)
+final ButtonStyle infoButtonStyle = ElevatedButton.styleFrom(
+  backgroundColor: AppColors.secondarySoft,
+  foregroundColor: AppColors.textPrimary,
+  textStyle: GoogleFonts.roboto(fontSize: 16),
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(12),
+    side: BorderSide(color: AppColors.secondary, width: 1),
+  ),
+  elevation: 6, // Sombra visible y suave
+  shadowColor: Colors.black.withOpacity(0.25),
+);
+
+// Tema oscuro de la app
+final ThemeData darkAppTheme = ThemeData(
+  brightness: Brightness.dark,
+  primaryColor: Color(0xFF181A20), // Fondo AppBar y botones
+  scaffoldBackgroundColor: Color(0xFF121212),
+  colorScheme: ColorScheme(
+    brightness: Brightness.dark,
+    primary: Color(0xFF181A20),
+    onPrimary: Colors.white,
+    secondary: Color(0xFF23272A),
+    onSecondary: Colors.white,
+    error: Color(0xFFEF9A9A),
+    onError: Colors.black,
+    background: Color(0xFF121212),
+    onBackground: Colors.white,
+    surface: Color(0xFF23272A),
+    onSurface: Colors.white,
+  ),
+  textTheme: GoogleFonts.robotoTextTheme(ThemeData.dark().textTheme).apply(
+    bodyColor: Colors.white,
+    displayColor: Colors.white,
+  ),
+  appBarTheme: AppBarTheme(
+    backgroundColor: Color(0xFF181A20),
+    foregroundColor: Colors.white,
+    titleTextStyle: GoogleFonts.roboto(
+      fontSize: 20,
+      fontWeight: FontWeight.bold,
+      color: Colors.white,
+    ),
+    iconTheme: IconThemeData(color: Colors.white),
+  ),
+  elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Color(0xFF23272A),
+      foregroundColor: Colors.white,
+      textStyle: GoogleFonts.roboto(fontSize: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      elevation: 4,
+      shadowColor: Colors.black.withOpacity(0.4),
+    ),
+  ),
+  textButtonTheme: TextButtonThemeData(
+    style: TextButton.styleFrom(
+      foregroundColor: Color(0xFF90CAF9),
+      textStyle: GoogleFonts.roboto(fontSize: 16),
+    ),
+  ),
+  inputDecorationTheme: InputDecorationTheme(
+    border: OutlineInputBorder(),
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Color(0xFF90CAF9)),
+    ),
+    labelStyle: GoogleFonts.roboto(color: Colors.white),
+    fillColor: Color(0xFF23272A),
+    filled: true,
+  ),
+  cardColor: Color(0xFF23272A),
+  iconTheme: IconThemeData(color: Colors.white),
+  dividerColor: Colors.white24,
+);

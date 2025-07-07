@@ -171,7 +171,7 @@ class _DatosVehicularesScreenState extends State<DatosVehicularesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Datos Vehiculares'),
+        title: Text('Vehículos'),
         backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: ListView.builder(
