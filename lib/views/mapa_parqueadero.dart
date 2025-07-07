@@ -1,114 +1,12 @@
 import 'package:flutter/material.dart';
-import '../controllers/auth_controller.dart';
-import '../models/usuario.dart';
 import 'dart:math' as math;
-import 'mapa_parqueadero.dart';
 
-class HomePage extends StatefulWidget {
+class MapaParqueaderoScreen extends StatefulWidget {
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<MapaParqueaderoScreen> createState() => _MapaParqueaderoScreenState();
 }
 
-class _HomePageState extends State<HomePage> {
-  final _authC = AuthController();
-  Usuario? usuario;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUsuario();
-  }
-
-  Future<void> _loadUsuario() async {
-    final u = await _authC.getCurrentUsuario();
-    setState(() => usuario = u);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Inicio - Parqueadero ESPE'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: () async {
-              await _authC.logout();
-            },
-          )
-        ],
-      ),
-      body: usuario == null
-          ? Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Bienvenido, ${usuario!.nombre}',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'Selecciona una opción:',
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  SizedBox(height: 30),
-                  GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    children: [
-                      _buildMenuButton(
-                          Icons.calendar_today, 'Reservar espacio'),
-                      _buildMenuButton(Icons.cancel, 'Cancelar reserva'),
-                      _buildMenuButton(Icons.map, 'Ver disponibilidad'),
-                      if (usuario!.rol == 'admin')
-                        _buildMenuButton(Icons.analytics, 'Ver reportes'),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-    );
-  }
-
-  Widget _buildMenuButton(IconData icon, String label) {
-    return ElevatedButton(
-      onPressed: () {
-        if (label == 'Ver disponibilidad') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => MapaParqueaderoScreen()),
-          );
-        }
-        // Aquí puedes agregar otras navegaciones para otros botones si lo deseas
-      },
-      style: ElevatedButton.styleFrom(
-        padding: EdgeInsets.all(16),
-        backgroundColor: Color(0xFF0A6E39),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 40),
-          SizedBox(height: 10),
-          Text(label, textAlign: TextAlign.center),
-        ],
-      ),
-    );
-  }
-}
-
-class MapaScreen extends StatefulWidget {
-  @override
-  State<MapaScreen> createState() => _MapaScreenState();
-}
-
-class _MapaScreenState extends State<MapaScreen>
+class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
     with SingleTickerProviderStateMixin {
   String? zonaSeleccionada;
   double zoomLevel = 1.0;
@@ -228,8 +126,8 @@ class _MapaScreenState extends State<MapaScreen>
                         top: 12,
                         left: 12,
                         child: Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2), // Más pequeño
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.85),
                             borderRadius: BorderRadius.circular(8),
@@ -238,8 +136,7 @@ class _MapaScreenState extends State<MapaScreen>
                           child: Text(
                             'Zoom: x${zoomLevel.toStringAsFixed(2)}',
                             style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13), // Letra más pequeña
+                                fontWeight: FontWeight.bold, fontSize: 13),
                           ),
                         ),
                       ),
