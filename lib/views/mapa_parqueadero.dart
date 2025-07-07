@@ -425,22 +425,29 @@ class _ZonaDetalleScreenState extends State<ZonaDetalleScreen> {
   void _cambiarZona(String nuevaZona) {
     setState(() {
       zonaSeleccionada = nuevaZona;
+      // Limpiar selecciones al cambiar zona
+      fechaSeleccionada = null;
+      horarioSeleccionado = null;
+      espacioSeleccionado = null;
     });
+  }
+
+  List<String> _espaciosFiltrados() {
+    if (fechaSeleccionada == null || horarioSeleccionado == null) return [];
+    final base = espaciosDisponibles[zonaSeleccionada!] ?? [];
+    // Simulación: horarios pares muestran espacios pares, impares los impares
+    int idx = horarios.indexOf(horarioSeleccionado!);
+    if (idx % 2 == 0) {
+      return base.where((e) => base.indexOf(e) % 2 == 0).toList();
+    } else {
+      return base.where((e) => base.indexOf(e) % 2 == 1).toList();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final imagen = zonaImagen[zonaSeleccionada!] ?? 'assets/images/mapa.png';
-    // Espacios disponibles según la fecha seleccionada (demo: alternar según día par/impar)
-    List<String> espacios = [];
-    if (fechaSeleccionada != null) {
-      final base = espaciosDisponibles[zonaSeleccionada!] ?? [];
-      if (fechaSeleccionada!.day % 2 == 0) {
-        espacios = base.where((e) => base.indexOf(e) % 2 == 0).toList();
-      } else {
-        espacios = base.where((e) => base.indexOf(e) % 2 == 1).toList();
-      }
-    }
+    final espacios = _espaciosFiltrados();
     return Scaffold(
       appBar: AppBar(
         title: Text('Zona ${zonaSeleccionada!}'),
@@ -531,8 +538,8 @@ class _ZonaDetalleScreenState extends State<ZonaDetalleScreen> {
                           if (picked != null) {
                             setState(() {
                               fechaSeleccionada = picked;
-                              espacioSeleccionado =
-                                  null; // Limpiar selección de espacio
+                              horarioSeleccionado = null;
+                              espacioSeleccionado = null;
                             });
                           }
                         },
@@ -553,8 +560,39 @@ class _ZonaDetalleScreenState extends State<ZonaDetalleScreen> {
                     ],
                   ),
                   SizedBox(height: 24),
-                  // Espacios disponibles solo si hay fecha
+                  // Selector de horario solo si hay fecha
                   if (fechaSeleccionada != null) ...[
+                    Text(
+                      'Seleccione un horario:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Color(0xFF0A6E39),
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    DropdownButton<String>(
+                      value: horarioSeleccionado,
+                      hint: Text('Seleccione un horario'),
+                      isExpanded: true,
+                      items: horarios
+                          .map((h) => DropdownMenuItem(
+                                value: h,
+                                child: Text(h),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          horarioSeleccionado = value;
+                          espacioSeleccionado = null;
+                        });
+                      },
+                    ),
+                    SizedBox(height: 24),
+                  ],
+                  // Espacios disponibles solo si hay fecha y horario
+                  if (fechaSeleccionada != null &&
+                      horarioSeleccionado != null) ...[
                     Text(
                       'Espacios disponibles:',
                       style: TextStyle(
@@ -590,36 +628,11 @@ class _ZonaDetalleScreenState extends State<ZonaDetalleScreen> {
                             .toList(),
                       )
                     else
-                      Text('No hay espacios disponibles para esta fecha.'),
+                      Text('No hay espacios disponibles para este horario.'),
                     SizedBox(height: 24),
                   ],
                   if (espacioSeleccionado != null) ...[
-                    Text(
-                      'Seleccione un horario:',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Color(0xFF0A6E39),
-                      ),
-                    ),
                     SizedBox(height: 8),
-                    DropdownButton<String>(
-                      value: horarioSeleccionado,
-                      hint: Text('Seleccione un horario'),
-                      isExpanded: true,
-                      items: horarios
-                          .map((h) => DropdownMenuItem(
-                                value: h,
-                                child: Text(h),
-                              ))
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          horarioSeleccionado = value;
-                        });
-                      },
-                    ),
-                    SizedBox(height: 32),
                   ],
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
