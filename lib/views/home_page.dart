@@ -165,7 +165,7 @@ class _MapaScreenState extends State<MapaScreen>
     final squareSize = screenWidth < screenHeight ? screenWidth : screenHeight;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Mapa de ESPE - Belisario Quevedo'),
+        title: Text('Mapa de parqueadero'),
         backgroundColor: Color(0xFF0A6E39),
         actions: [
           IconButton(
@@ -177,113 +177,198 @@ class _MapaScreenState extends State<MapaScreen>
       ),
       body: FadeTransition(
         opacity: _fadeAnimation,
-        child: Column(
-          children: [
-            SizedBox(height: 16),
-            Text(
-              'Mapa de parqueadero',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF0A6E39),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(height: 8),
+              Text(
+                'ESPE - Belisario Quevedo',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF0A6E39),
+                ),
+                textAlign: TextAlign.center,
               ),
-            ),
-            SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Center(
-                child: Stack(
-                  children: [
-                    Container(
-                      width: squareSize - 32,
-                      height: squareSize - 32,
-                      decoration: BoxDecoration(
-                        color: Colors.black12,
-                        border: Border.all(color: Color(0xFF0A6E39), width: 2),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 16,
-                            offset: Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: _ZoomOnlyImageViewer(
-                        key: _zoomKey,
-                        squareSize: squareSize - 32,
-                        onZoomChanged: _onZoomChanged,
-                      ),
-                    ),
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      child: Container(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Center(
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: squareSize - 32,
+                        height: squareSize - 32,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.85),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Color(0xFF0A6E39)),
+                          color: Colors.black12,
+                          border:
+                              Border.all(color: Color(0xFF0A6E39), width: 2),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 16,
+                              offset: Offset(0, 8),
+                            ),
+                          ],
                         ),
-                        child: Text('Zoom: x${zoomLevel.toStringAsFixed(2)}',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: _ZoomOnlyImageViewer(
+                            key: _zoomKey,
+                            squareSize: squareSize - 32,
+                            onZoomChanged: _onZoomChanged,
+                          ),
+                        ),
                       ),
-                    ),
-                    if (zoomLevel > 1.01)
+                      // Indicador de zoom en la esquina superior izquierda
                       Positioned(
-                        bottom: 12,
-                        right: 12,
-                        child: Tooltip(
-                          message: 'Restablecer zoom',
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(20),
-                              onTap: _resetZoom,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Color(0xFF0A6E39)),
+                        top: 12,
+                        left: 12,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2), // Más pequeño
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.85),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Color(0xFF0A6E39)),
+                          ),
+                          child: Text(
+                            'Zoom: x${zoomLevel.toStringAsFixed(2)}',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13), // Letra más pequeña
+                          ),
+                        ),
+                      ),
+                      // Botón de reset en la esquina inferior derecha, solo si el zoom es mayor a 1.0
+                      if (zoomLevel > 1.01)
+                        Positioned(
+                          bottom: 12,
+                          right: 12,
+                          child: Tooltip(
+                            message: 'Restablecer zoom',
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(20),
+                                onTap: _resetZoom,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    border:
+                                        Border.all(color: Color(0xFF0A6E39)),
+                                  ),
+                                  padding: EdgeInsets.all(8),
+                                  child: Icon(Icons.refresh,
+                                      color: Color(0xFF0A6E39)),
                                 ),
-                                padding: EdgeInsets.all(8),
-                                child: Icon(Icons.refresh,
-                                    color: Color(0xFF0A6E39)),
                               ),
                             ),
                           ),
                         ),
-                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 24),
+              Text(
+                'Seleccione una zona:',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 32.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _zonaButton('A'),
+                    SizedBox(width: 16),
+                    _zonaButton('B'),
+                    SizedBox(width: 16),
+                    _zonaButton('C'),
+                    SizedBox(width: 16),
+                    _zonaButton('D'),
                   ],
                 ),
               ),
-            ),
-            SizedBox(height: 24),
-            Text(
-              'Seleccione una zona:',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
+              // Sección de datos de reserva inventados
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24.0, 8.0, 24.0, 32.0),
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Color(0xFFF4F6F8),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Color(0xFF0A6E39), width: 1),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 6,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Reserva actual',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Color(0xFF0A6E39),
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(Icons.directions_car, color: Color(0xFF0A6E39)),
+                          SizedBox(width: 8),
+                          Text('Espacio: B-12', style: TextStyle(fontSize: 15)),
+                        ],
+                      ),
+                      SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.access_time, color: Color(0xFF0A6E39)),
+                          SizedBox(width: 8),
+                          Text('Hora de entrada: 08:30',
+                              style: TextStyle(fontSize: 15)),
+                        ],
+                      ),
+                      SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.date_range, color: Color(0xFF0A6E39)),
+                          SizedBox(width: 8),
+                          Text('Fecha: 2024-06-10',
+                              style: TextStyle(fontSize: 15)),
+                        ],
+                      ),
+                      SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.green),
+                          SizedBox(width: 8),
+                          Text('Estado: Confirmada',
+                              style: TextStyle(fontSize: 15)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-            SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 32.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _zonaButton('A'),
-                  SizedBox(width: 16),
-                  _zonaButton('B'),
-                  SizedBox(width: 16),
-                  _zonaButton('C'),
-                  SizedBox(width: 16),
-                  _zonaButton('D'),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -346,6 +431,7 @@ class _ZoomOnlyImageViewerState extends State<_ZoomOnlyImageViewer> {
       if (widget.onZoomChanged != null) {
         widget.onZoomChanged!(scale);
       }
+      setState(() {}); // Para actualizar panEnabled
     }
   }
 
@@ -371,7 +457,7 @@ class _ZoomOnlyImageViewerState extends State<_ZoomOnlyImageViewer> {
     return InteractiveViewer(
       minScale: 1.0,
       maxScale: 4.0,
-      panEnabled: false, // Solo zoom, sin desplazamiento
+      panEnabled: _lastScale > 1.01, // Solo permitir pan si hay zoom
       scaleEnabled: true,
       constrained: true,
       transformationController: _controller,
