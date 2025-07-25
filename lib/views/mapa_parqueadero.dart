@@ -18,7 +18,7 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
   final List<String> imagesZonaB = ['assets/images/zonaB.png']; // Solo una imagen
   final List<String> imagesZonaC = ['assets/images/zonaC1.png', 'assets/images/zonaC2.png'];
   final List<String> imagesZonaD = [
-    'assets/images/zonaD.png',
+    
     'assets/images/zonaD1.png',
     'assets/images/zonaD2.png',
     'assets/images/zonaD3.png',
@@ -115,6 +115,16 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
                 child: Center(
                   child: Stack(
                     children: [
+                      // Fondo de mapa.png
+                      Positioned.fill(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: Image.asset(
+                            'assets/images/mapa.png',
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
                       Container(
                         width: squareSize - 32,
                         height: squareSize - 32,
@@ -396,13 +406,18 @@ Widget _buildCarrousel(String? zona) {
     }
 
     return images.isEmpty
-        ? Center(child: Text('No hay imágenes disponibles.'))
+        ? SizedBox.shrink()
         : PageView.builder(
             itemCount: images.length,
             itemBuilder: (ctx, index) {
-              return Image.asset(
-                images[index],
-                fit: BoxFit.cover,
+              return InteractiveViewer(
+                minScale: 1.0,
+                maxScale: 4.0,
+                panEnabled: true,
+                child: Image.asset(
+                  images[index],
+                  fit: BoxFit.cover,
+                ),
               );
             },
           );
@@ -472,9 +487,14 @@ class _ZoomOnlyImageViewerState extends State<_ZoomOnlyImageViewer> {
       child: SizedBox(
         width: widget.squareSize,
         height: widget.squareSize,
-        child: Image.asset(
-          'assets/images/mapa.png',
-          fit: BoxFit.cover,
+        child: InteractiveViewer(
+          minScale: 1.0,
+          maxScale: 4.0,
+          panEnabled: true,
+          child: Image.asset(
+            'assets/images/mapa.png',
+            fit: BoxFit.cover,
+          ),
         ),
       ),
     );
@@ -580,9 +600,14 @@ class _ZonaDetalleScreenState extends State<ZonaDetalleScreen> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20),
-                  child: Image.asset(
-                    imagen,
-                    fit: BoxFit.cover,
+                  child: InteractiveViewer(
+                    minScale: 1.0,
+                    maxScale: 4.0,
+                    panEnabled: true,
+                    child: Image.asset(
+                      imagen,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
