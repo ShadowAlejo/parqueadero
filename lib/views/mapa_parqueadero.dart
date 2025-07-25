@@ -13,6 +13,18 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
   late AnimationController _animController;
   late Animation<double> _fadeAnimation;
   final GlobalKey<_ZoomOnlyImageViewerState> _zoomKey = GlobalKey();
+    // Imágenes para cada zona
+  final List<String> imagesZonaA = ['assets/images/zonaA.png']; // Solo una imagen
+  final List<String> imagesZonaB = ['assets/images/zonaB.png']; // Solo una imagen
+  final List<String> imagesZonaC = ['assets/images/zonaC1.png', 'assets/images/zonaC2.png'];
+  final List<String> imagesZonaD = [
+    'assets/images/zonaD.png',
+    'assets/images/zonaD1.png',
+    'assets/images/zonaD2.png',
+    'assets/images/zonaD3.png',
+    'assets/images/zonaD4.png'
+  ];
+
 
   @override
   void initState() {
@@ -122,11 +134,7 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(20),
-                          child: _ZoomOnlyImageViewer(
-                            key: _zoomKey,
-                            squareSize: squareSize - 32,
-                            onZoomChanged: _onZoomChanged,
-                          ),
+                          child: _buildCarrousel(zonaSeleccionada), // Aquí se asignan las imágenes
                         ),
                       ),
                       // Indicador de zoom en la esquina superior izquierda
@@ -329,17 +337,13 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
     );
   }
 
-  Widget _zonaButton(String label) {
+    Widget _zonaButton(String label) {
     final isSelected = zonaSeleccionada == label;
     return ElevatedButton(
       onPressed: () {
-        // Navegar a la pantalla de detalle de zona
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ZonaDetalleScreen(zona: label),
-          ),
-        );
+        setState(() {
+          zonaSeleccionada = label;
+        });
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: isSelected
@@ -375,7 +379,36 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen>
       ),
     );
   }
+
+Widget _buildCarrousel(String? zona) {
+    List<String> images;
+    
+    if (zona == 'A') {
+      images = imagesZonaA; // Zona A tiene solo una imagen
+    } else if (zona == 'B') {
+      images = imagesZonaB; // Zona B tiene una imagen
+    } else if (zona == 'C') {
+      images = imagesZonaC; // Zona C tiene dos imágenes
+    } else if (zona == 'D') {
+      images = imagesZonaD; // Zona D tiene varias imágenes
+    } else {
+      images = []; // Si no hay zona seleccionada, no mostrar imágenes
+    }
+
+    return images.isEmpty
+        ? Center(child: Text('No hay imágenes disponibles.'))
+        : PageView.builder(
+            itemCount: images.length,
+            itemBuilder: (ctx, index) {
+              return Image.asset(
+                images[index],
+                fit: BoxFit.cover,
+              );
+            },
+          );
+  }
 }
+
 
 class _ZoomOnlyImageViewer extends StatefulWidget {
   final double squareSize;
@@ -462,7 +495,7 @@ class _ZonaDetalleScreenState extends State<ZonaDetalleScreen> {
   DateTime? fechaSeleccionada;
   String? espacioSeleccionado;
   final Map<String, String> zonaImagen = {
-    'A': 'assets/images/zonaA.png',
+    'A': 'assets/images/zonaA.png',// iamgens para el uso de los parqueaderos 
     'B': 'assets/images/zonaB.png',
     'C': 'assets/images/zonaC.png',
     'D': 'assets/images/zonaD.png',
