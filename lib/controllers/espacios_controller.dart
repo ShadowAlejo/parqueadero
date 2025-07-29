@@ -60,4 +60,48 @@ class EspacioController {
     // Ejecutar el batch
     await batch.commit();
   }
+
+  // Función nueva para obtener los espacios disponibles organizados por sección
+  Stream<Map<String, List<Espacio>>> obtenerEspaciosDisponiblesPorSeccion(
+      String s) {
+    return _db
+        .collection('espacios')
+        .where('disponible',
+            isEqualTo: true) // Filtramos los espacios que están disponibles
+        .snapshots() // Escuchamos los cambios en tiempo real
+        .map((snapshot) {
+      Map<String, List<Espacio>> espaciosPorSeccion = {};
+
+      // Iteramos sobre los documentos obtenidos
+      for (var doc in snapshot.docs) {
+        // Convertimos el documento en un objeto Espacio
+        Espacio espacio =
+            Espacio.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+
+        // Si la sección ya está en el mapa, agregamos el espacio a la lista correspondiente
+        if (espaciosPorSeccion.containsKey(espacio.seccion)) {
+          espaciosPorSeccion[espacio.seccion]!.add(espacio);
+        } else {
+          // Si no existe la sección en el mapa, creamos una nueva lista con el espacio
+          espaciosPorSeccion[espacio.seccion] = [espacio];
+        }
+      }
+
+      // Retornamos el mapa con los espacios disponibles por sección
+      return espaciosPorSeccion;
+    });
+  }
+
+  /// Marca un espacio como no disponible (disponible = false)
+  Future<void> ocuparEspacio(String idEspacio) async {
+    try {
+      await _db
+          .collection('espacios')
+          .doc(idEspacio)
+          .update({'disponible': false});
+    } catch (e) {
+      // Manejo de errores
+      print("Error al actualizar el espacio: $e");
+    }
+  }
 }

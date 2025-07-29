@@ -6,7 +6,7 @@ class Vehiculo {
   final String marca;
   final String modelo;
   final String urlImagen;
-  final DocumentReference<Map<String, dynamic>> usuarioRef;
+  final String usuarioId;
 
   Vehiculo({
     required this.id,
@@ -14,29 +14,29 @@ class Vehiculo {
     required this.marca,
     required this.modelo,
     required this.urlImagen,
-    required this.usuarioRef,
+    required this.usuarioId,
   });
 
-  // ← Fíjate en el cambio: DocumentSnapshot<Map<String, dynamic>>
-  factory Vehiculo.fromSnapshot(DocumentSnapshot<Map<String, dynamic>> snap) {
-    final data = snap.data()!;
+  // Método para convertir un documento de Firestore en un objeto Vehiculo
+  factory Vehiculo.fromMap(Map<String, dynamic> data, String documentId) {
     return Vehiculo(
-      id: snap.id,
+      id: documentId,
       color: data['color'] ?? '',
       marca: data['marca'] ?? '',
       modelo: data['modelo'] ?? '',
       urlImagen: data['urlImagen'] ?? '',
-      usuarioRef: data['usuarioRef'] as DocumentReference<Map<String, dynamic>>,
+      usuarioId: data['usuarioRef'] ?? '',
     );
   }
 
+  // Método para convertir un objeto Vehiculo en un mapa para Firestore
   Map<String, dynamic> toMap() {
     return {
       'color': color,
       'marca': marca,
       'modelo': modelo,
       'urlImagen': urlImagen,
-      'usuarioRef': usuarioRef,
+      'usuarioRef': usuarioId,
     };
   }
 }
