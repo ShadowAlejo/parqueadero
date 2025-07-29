@@ -1,37 +1,63 @@
-// lib/controllers/espacios_controller.dart
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/espacio.dart';
+import 'package:parqueadero/models/espacio_model.dart';
 
-class EspaciosController {
-  final CollectionReference<Map<String, dynamic>> _colEspacios =
-      FirebaseFirestore.instance.collection('espacios');
+class EspacioController {
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  /// Lee todos los espacios
-  Future<List<Espacio>> fetchAll() async {
-    final snapshot = await _colEspacios.get();
-    return snapshot.docs.map((doc) => Espacio.fromFirestore(doc)).toList();
+  // Escuchar los espacios en tiempo real (usando Stream)
+  Stream<List<Espacio>> obtenerEspaciosEnTiempoReal() {
+    return _db.collection('espacios').snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return Espacio.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+      }).toList();
+    });
   }
 
-  /// Lee un espacio por su ID
-  Future<Espacio?> fetchById(String id) async {
-    final doc = await _colEspacios.doc(id).get();
-    if (!doc.exists) return null;
-    return Espacio.fromFirestore(doc);
+  // Obtener el número total de espacios por sección en tiempo real
+  Stream<int> obtenerTotalDeEspaciosPorSeccionEnTiempoReal(String seccion) {
+    return _db
+        .collection('espacios')
+        .where('seccion', isEqualTo: seccion)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length);
   }
 
-  /// Crea un nuevo espacio
-  Future<void> create(Espacio espacio) async {
-    await _colEspacios.add(espacio.toFirestore());
+  // Verificar si el número de espacio ya existe en la misma sección
+  Future<bool> numeroDeEspacioExiste(String seccion, int numero) async {
+    try {
+      QuerySnapshot snapshot = await _db
+          .collection('espacios')
+          .where('seccion', isEqualTo: seccion)
+          .where('numero', isEqualTo: numero)
+          .get();
+      return snapshot.docs.isNotEmpty;
+    } catch (e) {
+      throw Exception('Error al verificar el número del espacio: $e');
+    }
   }
 
-  /// Actualiza un espacio existente
-  Future<void> update(Espacio espacio) async {
-    await _colEspacios.doc(espacio.id).update(espacio.toFirestore());
-  }
+  // Agregar múltiples espacios a la misma sección
+  Future<void> agregarMultiplesEspacios(String seccion, int cantidad) async {
+    WriteBatch batch = _db.batch();
 
-  /// Elimina un espacio
-  Future<void> delete(String id) async {
-    await _colEspacios.doc(id).delete();
+    // Verificar que los números de espacio no se repitan
+    for (int i = 1; i <= cantidad; i++) {
+      bool existe = await numeroDeEspacioExiste(seccion, i);
+      if (existe) {
+        throw Exception('El número $i ya existe en la sección $seccion.');
+      }
+
+      String idEspacio = '${seccion}_$i';
+      Espacio espacio = Espacio(
+        idEspacio: idEspacio,
+        disponible: true,
+        numero: i.toString(),
+        seccion: seccion,
+      );
+      batch.set(_db.collection('espacios').doc(idEspacio), espacio.toMap());
+    }
+
+    // Ejecutar el batch
+    await batch.commit();
   }
 }

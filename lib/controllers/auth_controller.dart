@@ -25,9 +25,6 @@ class AuthController {
       // construye el perfil con el uid y escribe en Firestore
       final perfilConId = perfil.copyWith(id: uid);
       await _colUsuarios.doc(uid).set(perfilConId.toMap());
-      await _colUsuarios
-          .doc(uid)
-          .set(perfil.copyWith(id: uid).toMap()); // toMap de tu modelo
       return null; // éxito
     } on FirebaseAuthException catch (e) {
       return e.message;
@@ -60,5 +57,32 @@ class AuthController {
     final snap = await _colUsuarios.doc(user.uid).get();
     if (!snap.exists) return null;
     return Usuario.fromMap(snap.id, snap.data()!);
+  }
+
+  // Obtener rol del usuario logueado
+  Future<String?> getUsuarioRol() async {
+    final usuario = await getCurrentUsuario();
+    if (usuario != null) {
+      return usuario.rol; // Devuelve el rol del usuario
+    }
+    return null; // Si no se encuentra al usuario, retorna null
+  }
+
+  // Verificar si el usuario es administrador
+  Future<bool> isAdmin() async {
+    final rol = await getUsuarioRol();
+    if (rol != null && rol == 'admin') {
+      return true; // El usuario es administrador
+    }
+    return false; // El usuario no es administrador
+  }
+
+  // Verificar si el usuario es regular
+  Future<bool> isRegularUser() async {
+    final rol = await getUsuarioRol();
+    if (rol != null && rol == 'usuario') {
+      return true; // El usuario es regular
+    }
+    return false; // El usuario no es regular
   }
 }

@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../main.dart';
+import '../controllers/auth_controller.dart'; // Importa el controlador de autenticación
+import 'package:parqueadero/views/admin_panel.dart'; // Asegúrate de que esta importación esté correcta
 
 class ConfiguracionScreen extends StatelessWidget {
+  final AuthController authController =
+      AuthController(); // Instancia del controlador
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -105,6 +110,47 @@ class ConfiguracionScreen extends StatelessWidget {
                   ],
                 ),
               ),
+            ),
+            SizedBox(height: 32),
+            // Botón visible solo para administradores
+            FutureBuilder<bool>(
+              future:
+                  authController.isAdmin(), // Verifica si el usuario es admin
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(
+                      child:
+                          CircularProgressIndicator()); // Muestra un cargador mientras se obtiene el estado
+                }
+
+                if (snapshot.hasData && snapshot.data == true) {
+                  // Si el usuario es admin, muestra el botón
+                  return Center(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        // Navegar al panel administrativo
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  AdminPanelScreen()), // Aquí se abre AdminPanelScreen
+                        );
+                      },
+                      icon: Icon(Icons.admin_panel_settings),
+                      label: Text('Acción Administrativa'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  );
+                } else {
+                  // Si no es admin, no muestra nada
+                  return SizedBox.shrink();
+                }
+              },
             ),
             SizedBox(height: 32),
             Center(
