@@ -55,4 +55,22 @@ class PeriodoController {
       }
     }
   }
+
+  /// Retorna el `idPeriodo` del periodo activo,
+  /// o `null` si no hay ninguno marcado como activo.
+  Future<String?> obtenerIdPeriodoActivo() async {
+    final snapshot = await _db
+        .collection('periodo')
+        .where('activo', isEqualTo: true)
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      final data = snapshot.docs.first.data() as Map<String, dynamic>;
+      final periodo = Periodo.fromFirestore(data);
+      return periodo.idPeriodo;
+    }
+
+    return null;
+  }
 }

@@ -85,4 +85,8 @@ class AuthController {
     }
     return false; // El usuario no es regular
   }
+
+  /// Devuelve el UID del usuario actualmente autenticado,
+  /// o `null` si no hay sesión iniciada.
+  String? get currentUserId => _auth.currentUser?.uid;
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../controllers/auth_controller.dart';
 import '../models/usuario.dart';
-import '../models/vehiculo.dart';
+import '../models/vehiculo_model.dart';
 import 'dart:math' as math;
 import 'mapa_parqueadero.dart';
 import 'mapa_screen.dart';
