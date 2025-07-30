@@ -1,5 +1,7 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/material.dart';
 import 'package:parqueadero/controllers/espacios_controller.dart';
 import 'package:parqueadero/controllers/periodo_controller.dart';
@@ -33,6 +35,7 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen> {
     final imagenMapa = _zonaSeleccionada != null
         ? 'assets/images/zona${_zonaSeleccionada!}.png'
         : 'assets/images/mapa.png';
+
 
     return Scaffold(
       appBar: AppBar(
@@ -170,6 +173,38 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen> {
       },
     );
   }
+
+
+  Widget _buildCarrousel(String? zona) {
+    List<String> images;
+    if (zona == 'A') {
+      images = imagesZonaA;
+    } else if (zona == 'B') {
+      images = imagesZonaB;
+    } else if (zona == 'C') {
+      images = imagesZonaC;
+    } else if (zona == 'D') {
+      images = imagesZonaD;
+    } else {
+      images = [];
+    }
+
+    return images.isEmpty
+        ? SizedBox.shrink()
+        : PageView.builder(
+            itemCount: images.length,
+            itemBuilder: (ctx, index) {
+              return InteractiveViewer(
+                minScale: 1.0,
+                maxScale: 4.0,
+                panEnabled: true,
+                child: Image.asset(images[index], fit: BoxFit.cover),
+              );
+            },
+          );
+  }
+}
+
 
   // Lista de espacios
   Widget _buildEspaciosList() {

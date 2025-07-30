@@ -25,11 +25,16 @@ class _MapaPanelState extends State<MapaPanel> {
           children: [
             // 🗺️ Fondo del mapa PNG que cubre toda la pantalla
             Positioned.fill(
-              child: Transform.rotate(
-                angle: 0, // Puedes cambiar este valor para rotar la imagen (0 = sin rotación, 3.14 = 180 grados)
-                child: Image.asset(
-                  'assets/images/mapa.png',
-                  fit: BoxFit.fill, // Estira la imagen para cubrir toda la pantalla
+              child: InteractiveViewer(
+                minScale: 1.0,
+                maxScale: 4.0,
+                panEnabled: true,
+                child: Transform.rotate(
+                  angle: 0, // Puedes cambiar este valor para rotar la imagen (0 = sin rotación, 3.14 = 180 grados)
+                  child: Image.asset(
+                    'assets/images/mapa.png',
+                    fit: BoxFit.fill, // Estira la imagen para cubrir toda la pantalla
+                  ),
                 ),
               ),
             ),
