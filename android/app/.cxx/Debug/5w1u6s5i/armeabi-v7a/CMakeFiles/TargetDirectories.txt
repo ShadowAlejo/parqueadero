@@ -1,0 +1,2 @@
+C:/Users/palla/Desktop/SEXTO/Moviles/Profyecto Final/parqueadero/android/app/.cxx/Debug/5w1u6s5i/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/palla/Desktop/SEXTO/Moviles/Profyecto Final/parqueadero/android/app/.cxx/Debug/5w1u6s5i/armeabi-v7a/CMakeFiles/rebuild_cache.dir
