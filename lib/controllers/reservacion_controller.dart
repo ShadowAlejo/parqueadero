@@ -4,6 +4,7 @@ import 'package:parqueadero/controllers/espacios_controller.dart';
 import 'package:parqueadero/models/espacio_model.dart';
 import 'package:parqueadero/models/periodo_model.dart';
 import '../models/reservacion_model.dart';
+import 'periodo_controller.dart';
 
 class ReservacionController {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -188,96 +189,184 @@ class ReservacionController {
     }
   }
 
-  /// Cancela una reserva (solo el día indicado) y gestiona la disponibilidad del espacio:
-  /// - Si es reserva de un solo día, la marca “cancelado” y deja el espacio libre.
-  /// - Si es multi-día, ajusta/divide la reserva para quitar solo ese día, marca el espacio libre
-  ///   y programa (en el cliente) una re-ocupación al día siguiente si hay tramos posteriores.
+  /// Cancela solo el tramo correspondiente al día actual de una reservación
+  /// y libera el espacio para ese día (marca disponible = true).
   Future<void> cancelarReservacionYActualizarEspacio(String reservaId) async {
     final user = _auth.currentUser;
     if (user == null) {
       throw Exception('No hay usuario autenticado.');
     }
 
-    // 1) Transacción: cancelar el día y liberar espacio hoy
-    late final DateTime diaCancelar;
-    late final DocumentReference espacioRef;
     await _db.runTransaction((tx) async {
       final reservRef = _db.collection(_colReservaciones).doc(reservaId);
       final snap = await tx.get(reservRef);
-      if (!snap.exists) throw Exception('La reservación no existe.');
+      if (!snap.exists) {
+        throw Exception('La reservación no existe.');
+      }
+
       final reserv = Reservacion.fromSnapshot(snap);
 
       if (reserv.usuarioRef.id != user.uid) {
         throw Exception('No tienes permiso sobre esta reservación.');
       }
 
-      diaCancelar = DateTime(
+      // Fecha de hoy (solo Y/M/D)
+      final ahora = DateTime.now();
+      final hoy = DateTime(ahora.year, ahora.month, ahora.day);
+
+      // Periodo original (solo Y/M/D)
+      final inicio = DateTime(
         reserv.fechaInicio.year,
         reserv.fechaInicio.month,
         reserv.fechaInicio.day,
       );
-      final hoy = DateTime.now();
-      final hoySoloFecha = DateTime(hoy.year, hoy.month, hoy.day);
-      if (hoySoloFecha.isAfter(diaCancelar)) {
-        throw Exception('No puedes cancelar: la fecha de la reserva ya pasó.');
+      final fin = DateTime(
+        reserv.fechaFin.year,
+        reserv.fechaFin.month,
+        reserv.fechaFin.day,
+      );
+
+      // Verificar que hoy esté dentro de la reserva
+      if (hoy.isBefore(inicio) || hoy.isAfter(fin)) {
+        throw Exception('La reservación no cubre el día de hoy.');
       }
 
-      // Determinar si es sola un día
-      final esUnDia = reserv.fechaInicio.isAtSameMomentAs(reserv.fechaFin) &&
-          reserv.fechaInicio.isAtSameMomentAs(diaCancelar);
-
+      // Caso 1: reserva de un solo día (hoy es inicio y fin)
+      final esUnDia = inicio.isAtSameMomentAs(fin);
       if (esUnDia) {
+        // Marcamos la reserva completa como cancelada
         tx.update(reservRef, {'estado': 'cancelado'});
       } else {
-        // Multi-día: ajustar o dividir
-        final inicioOriginal = DateTime(
-          reserv.fechaInicio.year,
-          reserv.fechaInicio.month,
-          reserv.fechaInicio.day,
-        );
-        final finOriginal = DateTime(
-          reserv.fechaFin.year,
-          reserv.fechaFin.month,
-          reserv.fechaFin.day,
-        );
-
-        if (diaCancelar.isAtSameMomentAs(inicioOriginal)) {
-          // Primer día: desplazar inicio +1
+        // Multi-día: solo ajustamos el rango para quitar hoy
+        if (hoy.isAtSameMomentAs(inicio)) {
+          // Hoy es primer día: desplazamos fechaInicio +1
+          final nuevoInicio = hoy.add(Duration(days: 1));
           tx.update(reservRef, {
-            'fechaInicio':
-                Timestamp.fromDate(diaCancelar.add(Duration(days: 1)))
-          });
-        } else if (diaCancelar.isAtSameMomentAs(finOriginal)) {
-          // Último día: acortar fin -1
-          tx.update(reservRef, {
-            'fechaFin':
-                Timestamp.fromDate(diaCancelar.subtract(Duration(days: 1)))
+            'fechaInicio': Timestamp.fromDate(nuevoInicio),
           });
         } else {
-          // Día intermedio: dividimos en dos
+          // Hoy es último o día intermedio: acortamos fechaFin a ayer
+          final finAnterior = hoy.subtract(Duration(days: 1));
           tx.update(reservRef, {
-            'fechaFin':
-                Timestamp.fromDate(diaCancelar.subtract(Duration(days: 1)))
+            'fechaFin': Timestamp.fromDate(finAnterior),
           });
-          final nuevoRef = _db.collection(_colReservaciones).doc();
-          final nueva = Reservacion(
-            id: nuevoRef.id,
-            usuarioRef: reserv.usuarioRef,
-            espacioRef: reserv.espacioRef,
-            periodoRef: reserv.periodoRef,
-            fechaInicio: diaCancelar.add(Duration(days: 1)),
-            fechaFin: reserv.fechaFin,
-            horaInicio: reserv.horaInicio,
-            horaFin: reserv.horaFin,
-            estado: reserv.estado,
-          );
-          tx.set(nuevoRef, nueva.toMap());
         }
       }
 
-      // Liberar el espacio **hoy**
-      espacioRef = _db.collection(_colEspacios).doc(reserv.espacioRef.id);
+      // Liberar el espacio para hoy
+      final espacioRef = _db.collection(_colEspacios).doc(reserv.espacioRef.id);
       tx.update(espacioRef, {'disponible': true});
     });
+  }
+
+  /// Recupera todas las reservaciones del usuario logeado
+  /// que estén dentro del periodo activo.
+  Future<List<Reservacion>> obtenerReservacionesUsuarioPeriodoActivo() async {
+    // 1) Verificar usuario autenticado
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('No hay usuario autenticado.');
+    }
+
+    // 2) Obtener el ID del periodo activo
+    final periodoCtrl = PeriodoController();
+    final idPeriodoActivo = await periodoCtrl.obtenerIdPeriodoActivo();
+    if (idPeriodoActivo == null) {
+      // Si no hay periodo activo, devolvemos lista vacía
+      return [];
+    }
+    final periodoRef = _db.collection('periodo').doc(idPeriodoActivo);
+
+    // 3) Preparar la referencia al documento de usuario
+    final usuarioRef = _db.collection('usuarios').doc(user.uid);
+
+    // 4) Hacer la consulta con dos filtros de igualdad
+    final querySnap = await _db
+        .collection('reservaciones')
+        .where('usuario', isEqualTo: usuarioRef)
+        .where('periodo', isEqualTo: periodoRef)
+        .get();
+
+    // 5) Mapear cada documento a Reservacion y devolver la lista
+    return querySnap.docs.map((doc) => Reservacion.fromSnapshot(doc)).toList();
+  }
+
+  /// Cuenta las reservaciones **pendientes** y **confirmadas** del usuario logeado
+  /// que estén dentro del periodo activo.
+  /// Devuelve un Map con las claves:
+  Future<Map<String, int>> contarReservasPendientesYConfirmadas() async {
+    // 1) Usuario autenticado
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('No hay usuario autenticado.');
+    }
+
+    // 2) Obtener el ID del periodo activo
+    final periodoCtrl = PeriodoController();
+    final idPeriodoActivo = await periodoCtrl.obtenerIdPeriodoActivo();
+    if (idPeriodoActivo == null) {
+      // Sin periodo activo, no hay reservas que contar
+      return {
+        'pendientes': 0,
+        'confirmadas': 0,
+      };
+    }
+
+    // Referencias comunes
+    final periodoRef = _db.collection('periodo').doc(idPeriodoActivo);
+    final usuarioRef = _db.collection('usuarios').doc(user.uid);
+
+    // 3) Consulta para pendientes
+    final snapPendientes = await _db
+        .collection('reservaciones')
+        .where('usuario', isEqualTo: usuarioRef)
+        .where('periodo', isEqualTo: periodoRef)
+        .where('estado', isEqualTo: 'pendiente')
+        .get();
+
+    // 4) Consulta para confirmadas
+    final snapConfirmadas = await _db
+        .collection('reservaciones')
+        .where('usuario', isEqualTo: usuarioRef)
+        .where('periodo', isEqualTo: periodoRef)
+        .where('estado', isEqualTo: 'confirmado')
+        .get();
+
+    return {
+      'pendientes': snapPendientes.size,
+      'confirmadas': snapConfirmadas.size,
+    };
+  }
+
+  /// Verifica si existen reservaciones en días posteriores al actual
+  /// para el espacio cuyo ID es [idEspacio].
+  /// Devuelve `true` si hay al menos una reserva cuyo
+  /// campo `fechaInicio` sea ≥ mañana (en la zona UTC de tu servidor),
+  /// y `false` en caso contrario.
+  Future<bool> hayReservasFuturasParaEspacio(String idEspacio) async {
+    // 1) Referencia al espacio
+    final espacioRef =
+        FirebaseFirestore.instance.collection('espacios').doc(idEspacio);
+
+    // 2) Calcular mañana (solo fecha, sin hora)
+    final hoy = DateTime.now();
+    final inicioDeManana =
+        DateTime(hoy.year, hoy.month, hoy.day).add(const Duration(days: 1));
+
+    // 3) Query: solo filtramos por 'espacio' (índice simple)
+    final snap = await FirebaseFirestore.instance
+        .collection('reservaciones')
+        .where('espacio', isEqualTo: espacioRef)
+        .get();
+
+    // 4) Filtrado en cliente: buscar la primera fecha >= inicioDeManana
+    for (var doc in snap.docs) {
+      final fechaInicio = (doc.get('fechaInicio') as Timestamp).toDate();
+      if (!fechaInicio.isBefore(inicioDeManana)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

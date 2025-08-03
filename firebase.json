@@ -36,22 +36,7 @@
       ]
     }
   ],
-"firestore": {
-    "indexes": [
-      {
-        "collectionId": "reservaciones",
-        "fields": [
-          { "fieldPath": "estado",   "order": "ASCENDING" },
-          { "fieldPath": "fechaFin", "order": "ASCENDING" }
-        ]
-      },
-      {
-        "collectionId": "reservaciones",
-        "fields": [
-          { "fieldPath": "espacio", "order": "ASCENDING" },
-          { "fieldPath": "estado",  "order": "ASCENDING" }
-        ]
-      }
-    ]
+  "firestore": {
+    "indexes": "firestore.indexes.json"
   }
 }

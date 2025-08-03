@@ -9,7 +9,7 @@ class Reservacion {
   final DateTime fechaFin;
   final String horaInicio; // "HH:mm"
   final String horaFin; // "HH:mm"
-  final String estado; // pendiente, confirmado, disponible, finalizado
+  final String estado; // pendiente, confirmado, cancelado, finalizado
 
   Reservacion({
     required this.id,

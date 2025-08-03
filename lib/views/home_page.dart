@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import '../controllers/auth_controller.dart';
+import '../controllers/reservacion_controller.dart';
 import '../models/usuario.dart';
-import '../models/vehiculo_model.dart';
-import 'dart:math' as math;
 import 'mapa_parqueadero.dart';
-import 'mapa_screen.dart';
 import 'mis_reservas_screen.dart';
 import 'configuracion_screen.dart';
 import 'datos_vehiculares_screen.dart';
@@ -16,7 +14,11 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final _authC = AuthController();
+  final _reservC = ReservacionController();
   Usuario? usuario;
+
+  int pendientesCount = 0;
+  int confirmadasCount = 0;
 
   @override
   void initState() {
@@ -27,6 +29,24 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadUsuario() async {
     final u = await _authC.getCurrentUsuario();
     setState(() => usuario = u);
+    if (usuario != null) {
+      _loadReservasCounts();
+    }
+  }
+
+  Future<void> _loadReservasCounts() async {
+    try {
+      final counts = await _reservC.contarReservasPendientesYConfirmadas();
+      setState(() {
+        pendientesCount = counts['pendientes'] ?? 0;
+        confirmadasCount = counts['confirmadas'] ?? 0;
+      });
+    } catch (_) {
+      setState(() {
+        pendientesCount = 0;
+        confirmadasCount = 0;
+      });
+    }
   }
 
   @override
@@ -110,91 +130,73 @@ class _HomePageState extends State<HomePage> {
                                 SizedBox(height: 6),
                                 Row(
                                   children: [
-                                    Icon(Icons.pending_actions,
-                                        color: Theme.of(context).brightness ==
-                                                Brightness.dark
-                                            ? Colors.orange[300]
-                                            : Colors.orange,
-                                        size: 20),
+                                    Icon(
+                                      Icons.pending_actions,
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.orange[300]
+                                          : Colors.orange,
+                                      size: 20,
+                                    ),
                                     SizedBox(width: 4),
-                                    Text('Reservas pendientes: ',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurface,
-                                            )),
-                                    Text('2',
-                                        style: TextStyle(
-                                            color:
-                                                Theme.of(context).brightness ==
-                                                        Brightness.dark
-                                                    ? Colors.orange[200]
-                                                    : Colors.orange[800],
-                                            fontWeight: FontWeight.bold)),
-                                  ],
-                                ),
-                                SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Icon(Icons.check_circle,
-                                        color: Theme.of(context).brightness ==
-                                                Brightness.dark
-                                            ? Colors.greenAccent[200]
-                                            : Colors.green,
-                                        size: 20),
-                                    SizedBox(width: 4),
-                                    Text('Reservas confirmadas: ',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurface,
-                                            )),
-                                    Text('4',
-                                        style: TextStyle(
-                                            color:
-                                                Theme.of(context).brightness ==
-                                                        Brightness.dark
-                                                    ? Colors.greenAccent[100]
-                                                    : Colors.green[800],
-                                            fontWeight: FontWeight.bold)),
-                                  ],
-                                ),
-                                SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Icon(Icons.local_parking,
-                                        color: Theme.of(context).brightness ==
-                                                Brightness.dark
-                                            ? Colors.lightBlueAccent[100]
-                                            : Colors.blue,
-                                        size: 20),
-                                    SizedBox(width: 4),
-                                    Text('Código: ',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurface,
-                                            )),
-                                    Text('ESPE-1234',
-                                        style: TextStyle(
+                                    Text(
+                                      'Reservas pendientes: ',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w500,
                                             color: Theme.of(context)
-                                                        .brightness ==
-                                                    Brightness.dark
-                                                ? Colors.lightBlueAccent[100]
-                                                : Colors.blue[800],
-                                            fontWeight: FontWeight.bold)),
+                                                .colorScheme
+                                                .onSurface,
+                                          ),
+                                    ),
+                                    Text(
+                                      pendientesCount.toString(),
+                                      style: TextStyle(
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.orange[200]
+                                            : Colors.orange[800],
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.check_circle,
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.greenAccent[200]
+                                          : Colors.green,
+                                      size: 20,
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      'Reservas confirmadas: ',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w500,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface,
+                                          ),
+                                    ),
+                                    Text(
+                                      confirmadasCount.toString(),
+                                      style: TextStyle(
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.greenAccent[100]
+                                            : Colors.green[800],
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ],
@@ -233,31 +235,32 @@ class _HomePageState extends State<HomePage> {
   Widget _buildMenuButton(IconData icon, String label) {
     return ElevatedButton(
       onPressed: () {
-        if (label == 'Disponibilidad') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => MapaParqueaderoScreen()),
-          );
+        switch (label) {
+          case 'Disponibilidad':
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => MapaParqueaderoScreen()),
+            );
+            break;
+          case 'Mis reservas':
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => MisReservasScreen()),
+            );
+            break;
+          case 'Configuración':
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ConfiguracionScreen()),
+            );
+            break;
+          case 'Vehículos':
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => DatosVehicularesScreen()),
+            );
+            break;
         }
-        if (label == 'Mis reservas') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => MisReservasScreen()),
-          );
-        }
-        if (label == 'Configuración') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => ConfiguracionScreen()),
-          );
-        }
-        if (label == 'Vehículos') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => DatosVehicularesScreen()),
-          );
-        }
-        // Aquí puedes agregar otras navegaciones para otros botones si lo deseas
       },
       style: ElevatedButton.styleFrom(
         padding: EdgeInsets.all(16),

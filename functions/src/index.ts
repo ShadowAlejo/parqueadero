@@ -7,105 +7,106 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
-/* eslint-disable */
-
 // functions/src/index.ts
 
+import {onSchedule} from "firebase-functions/v2/scheduler";
+import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
+import moment from "moment-timezone";
+
 admin.initializeApp();
-const db = admin.firestore();
+const TZ = "America/Guayaquil";
 
-const { onSchedule } = require("firebase-functions/v2/scheduler") as {
-  onSchedule: (
-    opts: { schedule: string; timeZone?: string },
-    fn: (evt: { time: string }) => Promise<unknown>
-  ) => any;
-};
-
-export const monitorearFinalizacionReservacionesHoy = onSchedule(
-  {
-    schedule: "every 1 minutes",
-    timeZone: "America/Guayaquil",
-  },
-  async (event) => {
+export const finalizarReservaciones = onSchedule(
+  {schedule: "*/10 * * * *", timeZone: TZ},
+  async () => {
     try {
-      // 1) Fecha actual y principio del día, en zona America/Guayaquil
-      const ahora = new Date(event.time);
-      const inicio = new Date(ahora);
-      inicio.setHours(0, 0, 0, 0);
+      const now = moment().tz(TZ);
+      const start = now.clone().startOf("day");
+      const end = now.clone().endOf("day");
+      const db = admin.firestore();
+      const res = db.collection("reservaciones");
+      const impact = new Set<string>();
 
-      const tInicio = admin.firestore.Timestamp.fromDate(inicio);
-      const tAhora  = admin.firestore.Timestamp.fromDate(ahora);
+      const tsStart = admin.firestore.Timestamp
+        .fromDate(start.toDate());
+      const tsEnd = admin.firestore.Timestamp
+        .fromDate(end.toDate());
 
-      console.log(`Monitoreo iniciado. Rango: ${inicio.toISOString()} → ${ahora.toISOString()}`);
+      // 1) Reservas de HOY pendientes/confirmadas
+      const snap = await res
+        .where("fechaInicio", ">=", tsStart)
+        .where("fechaInicio", "<=", tsEnd)
+        .where("estado", "in", ["pendiente", "confirmado"])
+        .get();
 
-      // 2) Obtén pendientes y confirmados usando índice (estado, fechaFin)
-      const [pendientes, confirmados] = await Promise.all([
-        db.collection("reservaciones")
-          .where("estado", "==", "pendiente")
-          .where("fechaFin", ">=", tInicio)
-          .where("fechaFin", "<=", tAhora)
-          .get(),
-        db.collection("reservaciones")
-          .where("estado", "==", "confirmado")
-          .where("fechaFin", ">=", tInicio)
-          .where("fechaFin", "<=", tAhora)
-          .get(),
-      ]);
+      // 2) Finalizar si horaActual ≥ horaFin o ≥ 18
+      const batchR = db.batch();
+      snap.docs.forEach((doc) => {
+        const data = doc.data();
+        const finTs = data.fechaFin as admin.
+        firestore.Timestamp;
+        const finM = moment(finTs.toDate()).tz(TZ);
 
-      console.log(`Encontradas: pendientes=${pendientes.size}, confirmadas=${confirmados.size}`);
+        const horaAct = now.hour();
+        const horaFin = finM.hour();
 
-      const batch = db.batch();
-      const espaciosARevisar = new Set<admin.firestore.DocumentReference>();
+        if (horaAct >= horaFin || horaAct >= 18) {
+          batchR.update(doc.ref, {estado: "finalizado"});
 
-      // 3) Marca como finalizado las reservas que ya pasaron su hora tope
-      [...pendientes.docs, ...confirmados.docs].forEach((doc) => {
-        const data = doc.data() as {
-          fechaFin: admin.firestore.Timestamp;
-          horaFin?: string;
-          espacio: admin.firestore.DocumentReference;
-        };
+          // Recoger referencia al espacio
+          const refA = doc.get("espacioRef") as admin.
+          firestore.DocumentReference;
+          const refB = doc.get("espacio") as admin.
+          firestore.DocumentReference;
+          const spRef = refA ?? refB;
 
-        // Parseo seguro de horaFin
-        const [hRaw, mRaw] = (data.horaFin || "18:00").split(":");
-        const h = parseInt(hRaw, 10) || 18;
-        const m = parseInt(mRaw, 10) || 0;
-
-        const fechaFin = data.fechaFin.toDate();
-        fechaFin.setHours(Math.min(h, 18), h > 18 ? 0 : m, 0, 0);
-
-        if (ahora > fechaFin) {
-          batch.update(doc.ref, { estado: "finalizado" });
-          espaciosARevisar.add(data.espacio);
+          if (spRef?.path) {
+            impact.add(spRef.path);
+          } else {
+            logger.warn(
+              `Reserva ${doc.id} sin espacioRef válido`
+            );
+          }
         }
       });
+      await batchR.commit();
 
-      console.log(`Reservas a finalizar: ${espaciosARevisar.size}`);
+      // 3) Actualizar disponibilidad de espacios
+      const batchE = db.batch();
+      for (const path of impact) {
+        const eRef = db.doc(path);
 
-      // 4) Para cada espacio, verifica si aún quedan reservas activas
-      await Promise.all(
-        Array.from(espaciosARevisar).map(async (espRef) => {
-          const activos = await db
-            .collection("reservaciones")
-            .where("espacio", "==", espRef)
-            .where("estado", "in", ["pendiente", "confirmado"])
-            .get();
+        // 3.1) ¿Reservas activas HOY?
+        const hoy = await res
+          .where("espacioRef", "==", eRef)
+          .where("fechaInicio", ">=", tsStart)
+          .where("fechaInicio", "<=", tsEnd)
+          .where("estado", "in", ["pendiente", "confirmado"])
+          .limit(1)
+          .get();
 
-          if (activos.empty) {
-            batch.update(espRef, { disponible: true });
-          }
-        })
-      );
+        if (!hoy.empty) {
+          batchE.update(eRef, {disponible: false});
+          continue;
+        }
 
-      // 5) Aplica todos los cambios
-      await batch.commit();
-      console.log("Batch aplicado. Monitoreo completado sin errores.");
-    } catch (err) {
-      // Usamos console.error en lugar de logger.error para evitar el bug de 'seconds'
-      console.error("Error en monitorearFinalizacionReservacionesHoy:", err);
-      throw err;
+        // 3.2) ¿Reservas futuras?
+        const fut = await res
+          .where("espacioRef", "==", eRef)
+          .where("fechaInicio", ">", tsEnd)
+          .where("estado", "in", ["pendiente", "confirmado"])
+          .limit(1)
+          .get();
+
+        batchE.update(eRef, {disponible: fut.empty});
+      }
+      await batchE.commit();
+
+      logger.info("📅 Finalización y actualización completadas");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      logger.error("❌ Error en scheduler:", msg);
     }
-
-    return null;
   }
 );

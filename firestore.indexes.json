@@ -1,0 +1,13 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "reservaciones",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "espacioRef",  "order": "ASCENDING" },
+        { "fieldPath": "estado",      "order": "ASCENDING" },
+        { "fieldPath": "fechaInicio", "order": "ASCENDING" }
+      ]
+    }
+  ]
+}

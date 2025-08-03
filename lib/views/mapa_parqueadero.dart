@@ -42,36 +42,23 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen> {
       body: Column(
         children: [
           const SizedBox(height: 16),
-
-          // Encabezado
           _buildHeader(),
-
           const SizedBox(height: 16),
-
-          // Mapa dinámico
           _buildMapa(imagenMapa),
-
           const SizedBox(height: 24),
-
-          // Botones de zona
           _buildZonaButtons(),
-
-          // Si hay zona seleccionada, mostrar rango
           if (_zonaSeleccionada != null) ...[
             const SizedBox(height: 24),
             _buildRangoDropdown(),
             const SizedBox(height: 16),
             _buildEspaciosList(),
           ],
-
-          // Botón de reserva
           _buildReservaButton(),
         ],
       ),
     );
   }
 
-  // Encabezado de la pantalla
   Widget _buildHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -90,7 +77,6 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen> {
     );
   }
 
-  // Vista del mapa
   Widget _buildMapa(String imagenMapa) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -101,7 +87,6 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen> {
     );
   }
 
-  // Botones de selección de zona
   Widget _buildZonaButtons() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -136,7 +121,6 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen> {
     );
   }
 
-  // Dropdown de selección de rango
   Widget _buildRangoDropdown() {
     return StreamBuilder<int>(
       stream: _espacioController
@@ -152,8 +136,8 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen> {
           );
         final rangos = List.generate(
             (total / 10).ceil(),
-            (index) =>
-                '${index * 10 + 1}-${(index + 1) * 10 <= total ? (index + 1) * 10 : total}');
+            (i) =>
+                '${i * 10 + 1}-${(i + 1) * 10 <= total ? (i + 1) * 10 : total}');
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: DropdownButton<String>(
@@ -171,7 +155,6 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen> {
     );
   }
 
-  // Lista de espacios
   Widget _buildEspaciosList() {
     return Expanded(
       child: StreamBuilder<Map<String, List<Espacio>>>(
@@ -214,13 +197,13 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen> {
     );
   }
 
-  // Botón de reserva
   Widget _buildReservaButton() {
-    return (_espacioSeleccionadoId != null &&
-            _fechaInicio != null &&
-            _fechaFin != null &&
-            _horaInicio != null &&
-            _horaFin != null)
+    final habilitado = _espacioSeleccionadoId != null &&
+        _fechaInicio != null &&
+        _fechaFin != null &&
+        _horaInicio != null &&
+        _horaFin != null;
+    return habilitado
         ? Padding(
             padding: const EdgeInsets.all(16.0),
             child: SizedBox(
@@ -236,7 +219,6 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen> {
         : const SizedBox.shrink();
   }
 
-  // Función para mostrar cuadro de diálogo
   Future<void> _mostrarCuadroDialogo(Espacio espacio) async {
     showDialog(
       context: context,
@@ -247,27 +229,23 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildDateTimePicker('Seleccionar fecha inicio', _fechaInicio,
-                  (res) {
-                setState(() => _fechaInicio = res);
-              }),
+                  (res) => setState(() => _fechaInicio = res)),
               const SizedBox(height: 12),
-              _buildDateTimePicker('Seleccionar fecha fin', _fechaFin, (res) {
-                setState(() => _fechaFin = res);
-              }),
+              _buildDateTimePicker('Seleccionar fecha fin', _fechaFin,
+                  (res) => setState(() => _fechaFin = res)),
               const SizedBox(height: 12),
-              _buildTimePicker('Hora inicio', _horaInicio, (res) {
-                setState(() => _horaInicio = res);
-              }),
+              _buildTimePicker('Hora inicio', _horaInicio,
+                  (res) => setState(() => _horaInicio = res)),
               const SizedBox(height: 12),
-              _buildTimePicker('Hora fin', _horaFin, (res) {
-                setState(() => _horaFin = res);
-              }),
+              _buildTimePicker('Hora fin', _horaFin,
+                  (res) => setState(() => _horaFin = res)),
             ],
           ),
           actions: [
             TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancelar')),
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Cancelar'),
+            ),
             ElevatedButton(
               onPressed: () {
                 Navigator.of(ctx).pop();
@@ -281,40 +259,36 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen> {
     );
   }
 
-  // Función para construir selector de fechas
   Widget _buildDateTimePicker(
-      String label, DateTime? date, ValueChanged<DateTime?> onChanged) {
-    return OutlinedButton(
-      onPressed: () async {
-        final res = await showDatePicker(
-          context: context,
-          firstDate: DateTime.now(),
-          lastDate: DateTime.now().add(const Duration(days: 365)),
-          initialDate: date ?? DateTime.now(),
-        );
-        if (res != null) onChanged(res);
-      },
-      child: Text(date == null
-          ? label
-          : 'Seleccionado: ${date.toLocal().toIso8601String().split('T').first}'),
-    );
-  }
+          String label, DateTime? date, ValueChanged<DateTime?> onChanged) =>
+      OutlinedButton(
+        onPressed: () async {
+          final res = await showDatePicker(
+            context: context,
+            firstDate: DateTime.now(),
+            lastDate: DateTime.now().add(const Duration(days: 365)),
+            initialDate: date ?? DateTime.now(),
+          );
+          if (res != null) onChanged(res);
+        },
+        child: Text(date == null
+            ? label
+            : 'Seleccionado: ${date.toLocal().toIso8601String().split('T').first}'),
+      );
 
-  // Función para construir selector de hora
   Widget _buildTimePicker(
-      String label, TimeOfDay? time, ValueChanged<TimeOfDay?> onChanged) {
-    return OutlinedButton(
-      onPressed: () async {
-        final res = await showTimePicker(
-          context: context,
-          initialTime: time ?? TimeOfDay.now(),
-        );
-        if (res != null) onChanged(res);
-      },
-      child:
-          Text(time == null ? label : 'Seleccionado: ${time.format(context)}'),
-    );
-  }
+          String label, TimeOfDay? time, ValueChanged<TimeOfDay?> onChanged) =>
+      OutlinedButton(
+        onPressed: () async {
+          final res = await showTimePicker(
+            context: context,
+            initialTime: time ?? TimeOfDay.now(),
+          );
+          if (res != null) onChanged(res);
+        },
+        child: Text(
+            time == null ? label : 'Seleccionado: ${time.format(context)}'),
+      );
 
   Future<void> _onReservarPressed() async {
     setState(() => _reservando = true);
@@ -324,6 +298,20 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen> {
       if (_fechaInicio!.isAfter(_fechaFin!))
         throw 'La fecha fin debe ser igual o posterior a la fecha inicio';
 
+      // 1) Verificar si hay reservas futuras en este espacio
+      final tieneReservasFuturas = await _reservController
+          .hayReservasFuturasParaEspacio(_espacioSeleccionadoId!);
+
+      // 2) Si hay reservas posteriores, solo permitir reserva de un día
+      if (tieneReservasFuturas) {
+        final mismoDia = _fechaInicio!.year == _fechaFin!.year &&
+            _fechaInicio!.month == _fechaFin!.month &&
+            _fechaInicio!.day == _fechaFin!.day;
+        if (!mismoDia) {
+          throw 'Este espacio solo admite reservas de un día (hay reservas posteriores).';
+        }
+      }
+
       final idPeriodo = await _periodoController.obtenerIdPeriodoActivo();
       if (idPeriodo == null) throw 'No hay periodo activo';
 
@@ -331,10 +319,6 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen> {
       final espacioRef =
           FirebaseFirestore.instance.doc('espacios/$_espacioSeleccionadoId');
       final periodoRef = FirebaseFirestore.instance.doc('periodo/$idPeriodo');
-
-      final inicioHora =
-          DateTime(0, 1, 1, _horaInicio!.hour, _horaInicio!.minute);
-      final finHora = DateTime(0, 1, 1, _horaFin!.hour, _horaFin!.minute);
 
       final base = Reservacion(
         id: '',
@@ -352,9 +336,9 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen> {
       await _espacioController.ocuparEspacio(_espacioSeleccionadoId!);
 
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Reservaciones creadas exitosamente')));
+        const SnackBar(content: Text('Reservaciones creadas exitosamente')),
+      );
 
-      // Resetear formulario
       setState(() {
         _zonaSeleccionada = null;
         _espacioSeleccionadoId = null;
