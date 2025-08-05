@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "593436426291",
+    "project_id": "parqueadero-cfd1f",
+    "storage_bucket": "parqueadero-cfd1f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:593436426291:android:843575a5cea96832aa6346",
+        "android_client_info": {
+          "package_name": "com.example.parqueadero"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAaC5qkACDP0V1CibI97X9d-QJ3bqoSI1g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
