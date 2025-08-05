@@ -29,11 +29,18 @@ export const finalizarReservaciones = onSchedule(
       const res = db.collection("reservaciones");
       const impact = new Set<string>();
 
-      // Salir si aún no son las 6:00 AM
+      // 1) Salir si aún no son las 6 AM
       if (horaAct < 6) {
         logger.info(`⏳ Aún no son las 6 AM (${horaAct}h). 
           Se omite la ejecución.`);
-        return;
+        return; // Detener la ejecución si es antes de las 6 AM
+      }
+
+      // 2) Salir si son mas de las 18:20
+      if (horaAct === 18 && now.minute() > 15) {
+        logger.info(`⏳ Paso a las 18:20 (${horaAct}h). 
+          Se omite la ejecución.`);
+        return; // Detener la ejecución si es antes de las 6 AM
       }
 
       const tsStart = admin.firestore.Timestamp
@@ -58,21 +65,9 @@ export const finalizarReservaciones = onSchedule(
         const horaAct = now.hour();
         const horaFin = finM.hour();
 
-        // Verificar que la hora de finalización no esté vacía o inválida
-        if (!data["horaFin"] || data["horaFin"].isEmpty) {
-          logger.warn(`Reserva ${doc.id} sin horaFin válida.`);
-          return; // Salir si la horaFin no es válida
-        }
-
-        // Verificar si la hora de finalización es válida
-        if (horaFin === 0) {
-          logger.warn(`Reserva ${doc.id} tiene una horaFin 
-            inválida o no asignada.`);
-          return; // Salir si la hora de finalización es cero (inválida)
-        }
-
-        // Proceder con la finalización si la hora actual >= horaFin o >= 18
-        if (horaAct >= horaFin || horaAct >= 18) {
+        // Solo procesar si la horaFin es anterior o igual a la hora actual
+        if ((horaAct > horaFin) || (horaAct === horaFin &&
+          now.minute() >= finM.minute()) || horaAct >= 18) {
           batchR.update(doc.ref, {estado: "finalizado"});
 
           // Recoger referencia al espacio
@@ -130,6 +125,7 @@ export const finalizarReservaciones = onSchedule(
   }
 );
 
+
 // Funcion para manejar el manejo de espacios disponibles con
 // Reservaciones futuras
 export const actualizarDisponibilidadEspacios = onSchedule(
@@ -139,9 +135,15 @@ export const actualizarDisponibilidadEspacios = onSchedule(
       const now = moment().tz(TZ);
       const hora = now.hour(); const min = now.minute();
 
-      // 1) Sólo después de las 18:10
-      if (hora < 18 || (hora === 18 && min < 5)) {
+      // 1) Sólo después de las 18:20
+      if (hora < 18 || (hora === 18 && min < 20)) {
         logger.info("Antes de 18:10 → no se actualiza.");
+        return;
+      }
+
+      // 2) Para a las 23:50
+      if (hora > 23 || (hora === 23 && min > 50)) {
+        logger.info("Despues de 23:50 → no se actualiza.");
         return;
       }
 

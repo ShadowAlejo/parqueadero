@@ -220,8 +220,6 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       _buildMenuButton(Icons.map, 'Disponibilidad'),
                       _buildMenuButton(Icons.bookmark, 'Mis reservas'),
-                      if (usuario!.rol == 'admin')
-                        _buildMenuButton(Icons.analytics, 'Ver reportes'),
                       _buildMenuButton(Icons.settings, 'Configuración'),
                       _buildMenuButton(Icons.directions_car, 'Vehículos'),
                     ],
