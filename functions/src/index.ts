@@ -110,3 +110,111 @@ export const finalizarReservaciones = onSchedule(
     }
   }
 );
+
+// Funcion para manejar el manejo de espacios disponibles con
+// Reservaciones futuras
+export const actualizarDisponibilidadEspacios = onSchedule(
+  {schedule: "*/5 * * * *", timeZone: TZ},
+  async () => {
+    try {
+      const now = moment().tz(TZ);
+      const hora = now.hour(); const min = now.minute();
+
+      // 1) Sólo después de 18:10
+      if (hora < 18 || (hora === 18 && min < 10)) {
+        logger.info("Antes de 18:10, no se actualiza.");
+        return;
+      }
+
+      const db = admin.firestore();
+      const colR = db.collection("reservaciones");
+      const impact = new Set<string>();
+
+      // 2) ¿Hay reservas CANCELADAS HOY?
+      const inicioHoy = admin.firestore.
+        Timestamp.fromDate(now.clone().startOf("day").toDate());
+      const finHoy = admin.firestore.
+        Timestamp.fromDate(now.clone().endOf("day").toDate());
+      const canceladas = await colR
+        .where("fechaInicio", ">=", inicioHoy)
+        .where("fechaInicio", "<=", finHoy)
+        .where("estado", "==", "cancelado")
+        .get();
+
+      if (canceladas.empty) {
+        logger.info("Sin cancelaciones hoy"+
+          " → nada que recalcular.");
+        return;
+      }
+      logger.info("Se detectaron cancelaciones"+
+        " hoy → recalculando espacios.");
+
+      // 3) Consultar TODAS las reservas
+      // FUTURAS pendientes/confirmadas
+      const futuras = await colR
+        .where("fechaInicio", ">", admin.firestore.
+          Timestamp.fromDate(now.toDate()))
+        .where("estado", "in", ["pendiente", "confirmado"])
+        .get();
+
+      if (futuras.empty) {
+        logger.info("No hay reservaciones futuras.");
+        return;
+      }
+
+      // 4) Extraer referencias a ESPACIO (docRef) de cada reserva
+      futuras.docs.forEach((doc) => {
+        const data = doc.data();
+        const espField = data.espacio;
+        let espRef: admin.
+        firestore.DocumentReference | null = null;
+
+        // Si fuera DocumentReference (no en tu caso):
+        if (espField instanceof admin.
+          firestore.DocumentReference) {
+          espRef = espField;
+        } else if (typeof espField === "string") {
+          espRef = db.doc(espField);
+        }
+
+        if (espRef) {
+          impact.add(espRef.path);
+        } else {
+          logger.warn(`Reserva ${doc.id} sin campo 'espacio' válido`);
+        }
+      });
+
+      // 5) Para cada espacio en impact: si está disponible
+      // y tiene reservas futuras → disponible=false
+      const batch = db.batch();
+      const finDeHoy = admin.firestore.Timestamp.
+        fromDate(now.clone().endOf("day").toDate());
+
+      for (const path of impact) {
+        const eRef = db.doc(path);
+        const eSnap = await eRef.get();
+        const disponible = eSnap.get("disponible");
+
+        if (disponible === true) {
+          // Verificar si hay reserva FUTURA para este espacio
+          const futEsp = await colR
+            .where("espacio", "==", path)
+            .where("fechaInicio", ">", finDeHoy)
+            .where("estado", "in", ["pendiente", "confirmado"])
+            .limit(1)
+            .get();
+
+          if (!futEsp.empty) {
+            batch.update(eRef, {disponible: false});
+          }
+        }
+      }
+
+      // 6) Commit de actualizaciones
+      await batch.commit();
+      logger.info("✅ Disponibilidades actualizadas.");
+    } catch (err) {
+      logger.error("❌ Error en actualizarDisponibilidadEspacios:", err);
+    }
+  }
+);
