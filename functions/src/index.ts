@@ -22,11 +22,19 @@ export const finalizarReservaciones = onSchedule(
   async () => {
     try {
       const now = moment().tz(TZ);
+      const horaAct = now.hour();
       const start = now.clone().startOf("day");
       const end = now.clone().endOf("day");
       const db = admin.firestore();
       const res = db.collection("reservaciones");
       const impact = new Set<string>();
+
+      // Salir si aún no son las 6:00 AM
+      if (horaAct < 6) {
+        logger.info(`⏳ Aún no son las 6 AM (${horaAct}h). 
+          Se omite la ejecución.`);
+        return;
+      }
 
       const tsStart = admin.firestore.Timestamp
         .fromDate(start.toDate());
@@ -44,13 +52,26 @@ export const finalizarReservaciones = onSchedule(
       const batchR = db.batch();
       snap.docs.forEach((doc) => {
         const data = doc.data();
-        const finTs = data.fechaFin as admin.
-        firestore.Timestamp;
+        const finTs = data.fechaFin as admin.firestore.Timestamp;
         const finM = moment(finTs.toDate()).tz(TZ);
 
         const horaAct = now.hour();
         const horaFin = finM.hour();
 
+        // Verificar que la hora de finalización no esté vacía o inválida
+        if (!data["horaFin"] || data["horaFin"].isEmpty) {
+          logger.warn(`Reserva ${doc.id} sin horaFin válida.`);
+          return; // Salir si la horaFin no es válida
+        }
+
+        // Verificar si la hora de finalización es válida
+        if (horaFin === 0) {
+          logger.warn(`Reserva ${doc.id} tiene una horaFin 
+            inválida o no asignada.`);
+          return; // Salir si la hora de finalización es cero (inválida)
+        }
+
+        // Proceder con la finalización si la hora actual >= horaFin o >= 18
         if (horaAct >= horaFin || horaAct >= 18) {
           batchR.update(doc.ref, {estado: "finalizado"});
 
@@ -64,9 +85,7 @@ export const finalizarReservaciones = onSchedule(
           if (spRef?.path) {
             impact.add(spRef.path);
           } else {
-            logger.warn(
-              `Reserva ${doc.id} sin espacioRef válido`
-            );
+            logger.warn(`Reserva ${doc.id} sin espacioRef válido`);
           }
         }
       });
@@ -114,33 +133,32 @@ export const finalizarReservaciones = onSchedule(
 // Funcion para manejar el manejo de espacios disponibles con
 // Reservaciones futuras
 export const actualizarDisponibilidadEspacios = onSchedule(
-  { schedule: "*/5 * * * *", timeZone: TZ },
+  {schedule: "*/5 * * * *", timeZone: TZ},
   async () => {
     try {
       const now = moment().tz(TZ);
-      const hora = now.hour(), min = now.minute();
+      const hora = now.hour(); const min = now.minute();
 
-      // 1) Solo después de las 18:10
-      if (hora < 18 || (hora === 18 && min < 10)) {
-        logger.info("Antes de las 18:10 → no se actualiza.");
+      // 1) Sólo después de las 18:10
+      if (hora < 18 || (hora === 18 && min < 5)) {
+        logger.info("Antes de 18:10 → no se actualiza.");
         return;
       }
 
-      const db    = admin.firestore();
-      const colR  = db.collection("reservaciones");
+      const db = admin.firestore();
+      const colR = db.collection("reservaciones");
       const toUpdate = new Set<string>();
 
-      // 2) Solo si hoy hubo cancelaciones
+      // 2) Si hoy NO hubo cancelaciones, salimos
       const inicioHoy = admin.firestore.Timestamp.
-      fromDate(now.clone().startOf("day").toDate());
-      const finHoy    = admin.firestore.Timestamp.
-      fromDate(now.clone().endOf("day").toDate());
+        fromDate(now.clone().startOf("day").toDate());
+      const finHoy = admin.firestore.Timestamp.
+        fromDate(now.clone().endOf("day").toDate());
       const canceladas = await colR
         .where("fechaInicio", ">=", inicioHoy)
         .where("fechaInicio", "<=", finHoy)
         .where("estado", "==", "cancelado")
         .get();
-
       if (canceladas.empty) {
         logger.info("No hubo cancelaciones hoy → nada que hacer.");
         return;
@@ -153,60 +171,61 @@ export const actualizarDisponibilidadEspacios = onSchedule(
           Timestamp.fromDate(now.toDate()))
         .where("estado", "in", ["pendiente", "confirmado"])
         .get();
-
       if (futuras.empty) {
         logger.info("No hay reservaciones futuras.");
         return;
       }
 
-      // 4) Extraer ID de cada espacio afectado
-      futuras.docs.forEach(doc => {
-        const data    = doc.data();
-        let ruta = data.espacio as string;  // p.ej. "/espacios/A_1"
-        if (typeof ruta !== "string") {
+      // 4) Extraer PATH de cada espacio afectado
+      futuras.docs.forEach((doc) => {
+        const raw = doc.get("espacio");
+        let path: string | null = null;
+        if (raw instanceof admin.firestore.DocumentReference) {
+          path = raw.path; // e.g. "espacios/A_1"
+        } else if (typeof raw === "string") {
+          path = raw.replace(/^\/+/, ""); // remove leading slash
+        }
+        if (path) {
+          const [col, id] = path.split("/");
+          if (col === "espacios" && id) {
+            toUpdate.add(id);
+          } else {
+            logger.warn(`Reserva ${doc.id} ruta inesperada: ${raw}`);
+          }
+        } else {
           logger.warn(`Reserva ${doc.id} sin campo 'espacio' válido`);
-          return;
         }
-        ruta = ruta.replace(/^\/+/, "");     // "espacios/A_1"
-        const [col, id] = ruta.split("/");
-        if (col !== "espacios" || !id) {
-          logger.warn(`Reserva ${doc.id} ruta inesperada: ${data.espacio}`);
-          return;
-        }
-        toUpdate.add(id);
       });
 
-      // 5) Para cada espacio, si está libre y tiene reserva futura → marcar false
+      // 5) Para cada espacio: si estaba disponible
+      // y tiene reserva futura → marcar false
       const batch = db.batch();
       const finDeHoy = admin.firestore.Timestamp.
-      fromDate(now.clone().endOf("day").toDate());
-
+        fromDate(now.clone().endOf("day").toDate());
       for (const idEsp of toUpdate) {
-        const eRef     = db.collection("espacios").doc(idEsp);
-        const eSnap    = await eRef.get();
+        const eRef = db.collection("espacios").doc(idEsp);
+        const eSnap = await eRef.get();
         if (!eSnap.exists) {
           logger.warn(`Espacio ${idEsp} no existe.`);
           continue;
         }
         const disponible = eSnap.get("disponible");
         if (disponible === true) {
-          const futParaEsp = await colR
-            .where("espacio", "==", `/espacios/${idEsp}`)
+          const futEsp = await colR
+            .where("espacio", "==", eRef)
             .where("fechaInicio", ">", finDeHoy)
             .where("estado", "in", ["pendiente", "confirmado"])
             .limit(1)
             .get();
-
-          if (!futParaEsp.empty) {
-            batch.update(eRef, { disponible: false });
+          if (!futEsp.empty) {
+            batch.update(eRef, {disponible: false});
           }
         }
       }
 
-      // 6) Aplicar todas las actualizaciones de golpe
+      // 6) Aplicar todas las actualizaciones
       await batch.commit();
-      logger.info("✅ Disponibilidad en colección 'espacios' actualizada.");
-
+      logger.info("✅ Disponibilidad en 'espacios' actualizada.");
     } catch (err) {
       logger.error("❌ Error en actualizarDisponibilidadEspacios:", err);
     }

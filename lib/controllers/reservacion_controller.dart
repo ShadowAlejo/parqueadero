@@ -227,35 +227,44 @@ class ReservacionController {
       );
 
       // Verificar que hoy esté dentro de la reserva
-      if (hoy.isBefore(inicio) || hoy.isAfter(fin)) {
-        throw Exception('La reservación no cubre el día de hoy.');
-      }
-
-      // Caso 1: reserva de un solo día (hoy es inicio y fin)
-      final esUnDia = inicio.isAtSameMomentAs(fin);
-      if (esUnDia) {
-        // Marcamos la reserva completa como cancelada
+      if (hoy.isBefore(inicio)) {
+        // Caso para reservaciones futuras: solo se cancelan si son posteriores a hoy
         tx.update(reservRef, {'estado': 'cancelado'});
-      } else {
-        // Multi-día: solo ajustamos el rango para quitar hoy
-        if (hoy.isAtSameMomentAs(inicio)) {
-          // Hoy es primer día: desplazamos fechaInicio +1
-          final nuevoInicio = hoy.add(Duration(days: 1));
-          tx.update(reservRef, {
-            'fechaInicio': Timestamp.fromDate(nuevoInicio),
-          });
+        // Liberar el espacio para los días posteriores
+        final espacioRef =
+            _db.collection(_colEspacios).doc(reserv.espacioRef.id);
+        tx.update(espacioRef, {'disponible': true});
+      } else if (hoy.isBefore(fin) || hoy.isAtSameMomentAs(fin)) {
+        // Caso para reservas que están activas hoy
+        // Caso 1: reserva de un solo día (hoy es inicio y fin)
+        final esUnDia = inicio.isAtSameMomentAs(fin);
+        if (esUnDia) {
+          // Marcamos la reserva completa como cancelada
+          tx.update(reservRef, {'estado': 'cancelado'});
         } else {
-          // Hoy es último o día intermedio: acortamos fechaFin a ayer
-          final finAnterior = hoy.subtract(Duration(days: 1));
-          tx.update(reservRef, {
-            'fechaFin': Timestamp.fromDate(finAnterior),
-          });
+          // Multi-día: solo ajustamos el rango para quitar hoy
+          if (hoy.isAtSameMomentAs(inicio)) {
+            // Hoy es primer día: desplazamos fechaInicio +1
+            final nuevoInicio = hoy.add(Duration(days: 1));
+            tx.update(reservRef, {
+              'fechaInicio': Timestamp.fromDate(nuevoInicio),
+            });
+          } else {
+            // Hoy es último o día intermedio: acortamos fechaFin a ayer
+            final finAnterior = hoy.subtract(Duration(days: 1));
+            tx.update(reservRef, {
+              'fechaFin': Timestamp.fromDate(finAnterior),
+            });
+          }
         }
-      }
 
-      // Liberar el espacio para hoy
-      final espacioRef = _db.collection(_colEspacios).doc(reserv.espacioRef.id);
-      tx.update(espacioRef, {'disponible': true});
+        // Liberar el espacio para hoy
+        final espacioRef =
+            _db.collection(_colEspacios).doc(reserv.espacioRef.id);
+        tx.update(espacioRef, {'disponible': true});
+      } else {
+        throw Exception('La reservación ya ha finalizado.');
+      }
     });
   }
 
@@ -344,29 +353,42 @@ class ReservacionController {
   /// campo `fechaInicio` sea ≥ mañana (en la zona UTC de tu servidor),
   /// y `false` en caso contrario.
   Future<bool> hayReservasFuturasParaEspacio(String idEspacio) async {
-    // 1) Referencia al espacio
+    // 1) Verificar si hay un periodo activo
+    final periodoRef = FirebaseFirestore.instance
+        .collection('periodos')
+        .where('activo', isEqualTo: true)
+        .limit(1);
+    final periodoSnap = await periodoRef.get();
+
+    // Si no hay periodo activo, no realizamos ninguna operación
+    if (periodoSnap.docs.isEmpty) {
+      return false; // No hay periodo activo
+    }
+
+    // 2) Referencia al espacio
     final espacioRef =
         FirebaseFirestore.instance.collection('espacios').doc(idEspacio);
 
-    // 2) Calcular mañana (solo fecha, sin hora)
+    // 3) Calcular mañana (solo fecha, sin hora)
     final hoy = DateTime.now();
     final inicioDeManana =
         DateTime(hoy.year, hoy.month, hoy.day).add(const Duration(days: 1));
 
-    // 3) Query: solo filtramos por 'espacio' (índice simple)
+    // 4) Query: solo filtramos por 'espacio' (índice simple)
     final snap = await FirebaseFirestore.instance
         .collection('reservaciones')
-        .where('espacio', isEqualTo: espacioRef)
+        .where('espacio', isEqualTo: espacioRef) // solo filtro por espacio
         .get();
 
-    // 4) Filtrado en cliente: buscar la primera fecha >= inicioDeManana
+    // 5) Filtrado en cliente: buscar la primera reserva con fecha >= inicioDeManana
     for (var doc in snap.docs) {
       final fechaInicio = (doc.get('fechaInicio') as Timestamp).toDate();
-      if (!fechaInicio.isBefore(inicioDeManana)) {
-        return true;
+      if (fechaInicio.isAfter(inicioDeManana) ||
+          fechaInicio.isAtSameMomentAs(inicioDeManana)) {
+        return true; // Hay una reserva futura
       }
     }
 
-    return false;
+    return false; // No hay reservas futuras
   }
 }

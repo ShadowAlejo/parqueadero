@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:parqueadero/controllers/espacios_controller.dart';
 import 'package:parqueadero/controllers/periodo_controller.dart';
 import 'package:parqueadero/models/periodo_model.dart';
 
@@ -44,6 +45,9 @@ class _PeriodoViewState extends State<PeriodoView> {
         activo: true,
         nombre: nombre,
       ));
+
+      // Llamar a la función para cambiar la disponibilidad de todos los espacios a true
+      await EspacioController().cambiarDisponibilidadDeTodosLosEspacios();
 
       _nombreController.clear();
     }
