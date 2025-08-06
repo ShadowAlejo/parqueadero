@@ -37,7 +37,7 @@ export const finalizarReservaciones = onSchedule(
       }
 
       // 2) Salir si son mas de las 18:20
-      if (horaAct === 18 && now.minute() > 15) {
+      if (horaAct > 18 ||horaAct === 18 && now.minute() > 15) {
         logger.info(`⏳ Paso a las 18:20 (${horaAct}h). 
           Se omite la ejecución.`);
         return; // Detener la ejecución si es antes de las 6 AM
@@ -151,7 +151,7 @@ export const actualizarDisponibilidadEspacios = onSchedule(
       const colR = db.collection("reservaciones");
       const toUpdate = new Set<string>();
 
-      // 2) Si hoy NO hubo cancelaciones, salimos
+      // 2) Si hoy NO hubo cancelaciones y finalizaciones, salimos
       const inicioHoy = admin.firestore.Timestamp.
         fromDate(now.clone().startOf("day").toDate());
       const finHoy = admin.firestore.Timestamp.
@@ -159,10 +159,11 @@ export const actualizarDisponibilidadEspacios = onSchedule(
       const canceladas = await colR
         .where("fechaInicio", ">=", inicioHoy)
         .where("fechaInicio", "<=", finHoy)
-        .where("estado", "==", "cancelado")
+        .where("estado", "in", ["cancelado", "finalizado"])
         .get();
       if (canceladas.empty) {
-        logger.info("No hubo cancelaciones hoy → nada que hacer.");
+        logger.info("No hubo cancelaciones ni finalizaciones " +
+          "hoy → nada que hacer.");
         return;
       }
       logger.info("Cancelaciones hoy → recalculando disponibilidad.");
