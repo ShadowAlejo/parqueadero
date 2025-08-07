@@ -3,23 +3,23 @@ import 'package:parqueadero/controllers/auth_controller.dart';
 import 'package:parqueadero/controllers/periodo_controller.dart';
 import 'package:parqueadero/controllers/reservacion_controller.dart';
 import 'package:parqueadero/models/periodo_model.dart';
+import 'package:parqueadero/models/reservacion_model.dart';
 import 'package:parqueadero/theme.dart';
 
-class ReportesView extends StatefulWidget {
+class ReporteView extends StatefulWidget {
   @override
-  _ReportesViewState createState() => _ReportesViewState();
+  _ReporteViewState createState() => _ReporteViewState();
 }
 
-class _ReportesViewState extends State<ReportesView> {
+class _ReporteViewState extends State<ReporteView> {
   final AuthController _authController = AuthController();
   final PeriodoController _periodoController = PeriodoController();
   final ReservacionController _reservacionController = ReservacionController();
 
   String? _selectedPeriodo;
-  int _totalUsuarios = 0;
-  int _totalReservaciones = 0;
-  int _reservacionesActivas = 0;
-  int _reservacionesCompletadas = 0;
+  int _numeroDeUsuarios = 0;
+  Map<String, int> _reservacionesPorEstado = {};
+  Map<String, int> _reservacionesPorSeccion = {};
   bool _isLoading = false;
 
   @override
@@ -34,10 +34,10 @@ class _ReportesViewState extends State<ReportesView> {
     });
 
     try {
-      _totalUsuarios = await _authController.obtenerNumeroDeUsuarios();
+      _numeroDeUsuarios = await _authController.obtenerNumeroDeUsuarios();
       setState(() {});
     } catch (e) {
-      print('Error al cargar datos iniciales: $e');
+      print('Error al obtener el número de usuarios: $e');
     } finally {
       setState(() {
         _isLoading = false;
@@ -45,17 +45,27 @@ class _ReportesViewState extends State<ReportesView> {
     }
   }
 
-  void _cargarEstadisticasPeriodo(String idPeriodo) async {
-    // Aquí se cargarían las estadísticas específicas del período
-    // Por ahora usamos valores de ejemplo
-    setState(() {
-      _totalReservaciones = 150;
-      _reservacionesActivas = 45;
-      _reservacionesCompletadas = 105;
+  void _obtenerReservacionesPorEstado(String idPeriodo) async {
+    _reservacionController
+        .obtenerNumeroDeReservacionesPorEstado(idPeriodo)
+        .listen((map) {
+      setState(() {
+        _reservacionesPorEstado = map;
+      });
     });
   }
 
-  Widget _buildMetricCard(String title, String value, String subtitle, IconData icon, Color color) {
+  void _obtenerReservacionesPorSeccion(String idPeriodo) async {
+    _reservacionController
+        .obtenerReservacionesPorSeccion(idPeriodo)
+        .listen((map) {
+      setState(() {
+        _reservacionesPorSeccion = map;
+      });
+    });
+  }
+
+  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -70,21 +80,14 @@ class _ReportesViewState extends State<ReportesView> {
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              Spacer(),
-              Icon(Icons.trending_up, color: Colors.green, size: 16),
-            ],
+          Container(
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: color, size: 24),
           ),
           SizedBox(height: 12),
           Text(
@@ -99,25 +102,50 @@ class _ReportesViewState extends State<ReportesView> {
           Text(
             title,
             style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: TextStyle(
               fontSize: 12,
-              color: AppColors.textPrimary.withOpacity(0.6),
+              color: AppColors.textPrimary.withOpacity(0.7),
             ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildChartCard(String title, List<Map<String, dynamic>> data, Color color) {
+  Widget _buildDataCard(String title, Map<String, int> data, Color color) {
+    if (data.isEmpty) {
+      return Container(
+        padding: EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.bar_chart_outlined,
+              size: 48,
+              color: AppColors.textPrimary.withOpacity(0.3),
+            ),
+            SizedBox(height: 12),
+            Text(
+              'No hay datos disponibles',
+              style: TextStyle(
+                color: AppColors.textPrimary.withOpacity(0.7),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -136,7 +164,7 @@ class _ReportesViewState extends State<ReportesView> {
         children: [
           Row(
             children: [
-              Icon(Icons.bar_chart, color: color, size: 20),
+              Icon(Icons.analytics, color: color, size: 20),
               SizedBox(width: 8),
               Text(
                 title,
@@ -149,7 +177,11 @@ class _ReportesViewState extends State<ReportesView> {
             ],
           ),
           SizedBox(height: 16),
-          ...data.map((item) {
+          ...data.entries.map((entry) {
+            double percentage = data.values.reduce((a, b) => a + b) > 0
+                ? (entry.value / data.values.reduce((a, b) => a + b)) * 100
+                : 0;
+            
             return Container(
               margin: EdgeInsets.only(bottom: 12),
               child: Column(
@@ -159,14 +191,14 @@ class _ReportesViewState extends State<ReportesView> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        item['label'],
+                        entry.key,
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
                           color: AppColors.textPrimary,
                         ),
                       ),
                       Text(
-                        '${item['value']}',
+                        '${entry.value} (${percentage.toStringAsFixed(1)}%)',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: color,
@@ -176,7 +208,7 @@ class _ReportesViewState extends State<ReportesView> {
                   ),
                   SizedBox(height: 8),
                   LinearProgressIndicator(
-                    value: item['percentage'] / 100,
+                    value: percentage / 100,
                     backgroundColor: color.withOpacity(0.1),
                     valueColor: AlwaysStoppedAnimation<Color>(color),
                   ),
@@ -195,27 +227,14 @@ class _ReportesViewState extends State<ReportesView> {
       appBar: AppBar(
         title: Row(
           children: [
-            Icon(Icons.assessment, size: 24),
+            Icon(Icons.analytics, size: 24),
             SizedBox(width: 8),
-            Text("Reportes Detallados"),
+            Text("Reportes y Estadísticas"),
           ],
         ),
         backgroundColor: Theme.of(context).colorScheme.primary,
         elevation: 0,
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.file_download),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Descargando reporte...'),
-                  backgroundColor: Colors.blue,
-                ),
-              );
-            },
-          ),
-        ],
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -268,10 +287,10 @@ class _ReportesViewState extends State<ReportesView> {
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.filter_list, color: Theme.of(context).colorScheme.primary),
+                              Icon(Icons.calendar_today, color: Theme.of(context).colorScheme.primary),
                               SizedBox(width: 8),
                               Text(
-                                'Filtrar por Período',
+                                'Seleccionar Período',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -304,7 +323,8 @@ class _ReportesViewState extends State<ReportesView> {
                                     setState(() {
                                       _selectedPeriodo = newValue;
                                       if (newValue != null) {
-                                        _cargarEstadisticasPeriodo(newValue);
+                                        _obtenerReservacionesPorEstado(newValue);
+                                        _obtenerReservacionesPorSeccion(newValue);
                                       }
                                     });
                                   },
@@ -334,9 +354,9 @@ class _ReportesViewState extends State<ReportesView> {
 
                     SizedBox(height: 20),
 
-                    // Métricas principales
+                    // Estadísticas generales
                     Text(
-                      'Métricas Principales',
+                      'Estadísticas Generales',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -349,48 +369,20 @@ class _ReportesViewState extends State<ReportesView> {
                     Row(
                       children: [
                         Expanded(
-                          child: _buildMetricCard(
-                            'Usuarios',
-                            '$_totalUsuarios',
-                            'Registrados',
+                          child: _buildStatCard(
+                            'Usuarios Registrados',
+                            '$_numeroDeUsuarios',
                             Icons.people,
                             Colors.blue,
                           ),
                         ),
                         SizedBox(width: 12),
                         Expanded(
-                          child: _buildMetricCard(
-                            'Reservaciones',
-                            '$_totalReservaciones',
-                            'Totales',
-                            Icons.bookmark,
-                            Colors.orange,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: 12),
-
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildMetricCard(
-                            'Activas',
-                            '$_reservacionesActivas',
-                            'En curso',
-                            Icons.play_circle,
+                          child: _buildStatCard(
+                            'Períodos Activos',
+                            _selectedPeriodo != null ? '1' : '0',
+                            Icons.calendar_today,
                             Colors.green,
-                          ),
-                        ),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: _buildMetricCard(
-                            'Completadas',
-                            '$_reservacionesCompletadas',
-                            'Finalizadas',
-                            Icons.check_circle,
-                            Colors.purple,
                           ),
                         ),
                       ],
@@ -398,10 +390,10 @@ class _ReportesViewState extends State<ReportesView> {
 
                     SizedBox(height: 20),
 
-                    // Gráficos y análisis
+                    // Reportes detallados
                     if (_selectedPeriodo != null) ...[
                       Text(
-                        'Análisis Detallado',
+                        'Reportes del Período',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -415,24 +407,16 @@ class _ReportesViewState extends State<ReportesView> {
                         child: SingleChildScrollView(
                           child: Column(
                             children: [
-                              _buildChartCard(
-                                'Uso por Sección',
-                                [
-                                  {'label': 'Sección A', 'value': 45, 'percentage': 30.0},
-                                  {'label': 'Sección B', 'value': 38, 'percentage': 25.3},
-                                  {'label': 'Sección C', 'value': 32, 'percentage': 21.3},
-                                  {'label': 'Sección D', 'value': 35, 'percentage': 23.3},
-                                ],
-                                Colors.blue,
+                              _buildDataCard(
+                                'Reservaciones por Estado',
+                                _reservacionesPorEstado,
+                                Colors.orange,
                               ),
                               SizedBox(height: 16),
-                              _buildChartCard(
-                                'Estado de Reservaciones',
-                                [
-                                  {'label': 'Activas', 'value': _reservacionesActivas, 'percentage': (_reservacionesActivas / _totalReservaciones * 100)},
-                                  {'label': 'Completadas', 'value': _reservacionesCompletadas, 'percentage': (_reservacionesCompletadas / _totalReservaciones * 100)},
-                                ],
-                                Colors.green,
+                              _buildDataCard(
+                                'Reservaciones por Sección',
+                                _reservacionesPorSeccion,
+                                Colors.purple,
                               ),
                             ],
                           ),
@@ -445,7 +429,7 @@ class _ReportesViewState extends State<ReportesView> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                Icons.assessment_outlined,
+                                Icons.analytics_outlined,
                                 size: 64,
                                 color: AppColors.textPrimary.withOpacity(0.3),
                               ),
@@ -459,7 +443,7 @@ class _ReportesViewState extends State<ReportesView> {
                               ),
                               SizedBox(height: 8),
                               Text(
-                                'para ver el análisis detallado',
+                                'para ver los reportes detallados',
                                 style: TextStyle(
                                   color: AppColors.textPrimary.withOpacity(0.5),
                                 ),
