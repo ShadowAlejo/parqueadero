@@ -88,9 +88,15 @@ class ReservacionController {
           'La fecha fin debe ser igual o posterior a la fecha inicio.');
     }
 
-    final batch = _db.batch();
+    // Retry mechanism with exponential backoff
+    int attempts = 0;
+    const maxAttempts = 3;
 
     for (int i = 0; i < totalDias; i++) {
+      // 1. Espera 1 segundo antes de cada creación (retraso controlado)
+      await Future.delayed(Duration(seconds: 1));
+
+      // 2. Calcula fechaInicio/fechaFin para el día i
       final diaActual = inicio.add(Duration(days: i));
       final fechaIniConHora = DateTime(
         diaActual.year,
@@ -98,16 +104,16 @@ class ReservacionController {
         diaActual.day,
         r.fechaInicio.hour,
         r.fechaInicio.minute,
-      ).toUtc(); // Convertir a UTC
-
+      ).toUtc();
       final fechaFinConHora = DateTime(
         diaActual.year,
         diaActual.month,
         diaActual.day,
         r.fechaFin.hour,
         r.fechaFin.minute,
-      ).toUtc(); // Convertir a UTC
+      ).toUtc();
 
+      // 3. Prepara la reservación del día
       final rDia = Reservacion(
         id: '',
         usuarioRef: r.usuarioRef,
@@ -120,16 +126,40 @@ class ReservacionController {
         estado: r.estado,
       );
 
-      // Agregar la reservación al batch
-      batch.set(_db.collection(_col).doc(), rDia.toMap());
+      // Intento de escribir en Firestore con reintentos
+      while (attempts < maxAttempts) {
+        try {
+          // 4. Inserta la reservación (operación de escritura)
+          final docRef = _db.collection(_col).doc();
+          await docRef.set(rDia.toMap());
 
-      // Agregar la actualización del espacio al batch
-      batch.update(_db.collection('espacios').doc(r.espacioRef.id), {
-        'disponible': false,
-      });
+          // 5. Usa una transacción para actualizar la disponibilidad del espacio
+          await _db.runTransaction((transaction) async {
+            final espacioRef = _db.collection('espacios').doc(r.espacioRef.id);
+            final espacioDoc = await transaction.get(espacioRef);
+
+            if (!espacioDoc.exists) {
+              throw Exception('El espacio no existe.');
+            }
+
+            // Verificar si el espacio está disponible antes de actualizarlo
+            transaction.update(espacioRef, {'disponible': false});
+          });
+
+          break; // Salir del ciclo de reintento si todo fue exitoso
+        } catch (e) {
+          attempts++;
+          print("Error al procesar el día ${i + 1}: $e");
+
+          if (attempts >= maxAttempts) {
+            throw Exception("Error tras $maxAttempts intentos: $e");
+          }
+
+          // Exponential backoff para reintentos
+          await Future.delayed(Duration(seconds: 2 ^ attempts));
+        }
+      }
     }
-
-    await batch.commit();
   }
 
   // Obtiene la información del espacio y periodo relacionados con una reservación
@@ -390,5 +420,78 @@ class ReservacionController {
     }
 
     return false; // No hay reservas futuras
+  }
+
+  Stream<List<Reservacion>> obtenerReservacionesPorPeriodo(String idPeriodo) {
+    return _db
+        .collection(_col)
+        .where('periodo',
+            isEqualTo: idPeriodo) // Filtra directamente en la consulta
+        .snapshots() // Escucha en tiempo real
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) =>
+              Reservacion.fromSnapshot(doc)) // Convierte a objetos Reservacion
+          .toList();
+    });
+  }
+
+  Stream<Map<String, int>> obtenerNumeroDeReservacionesPorEstado(
+      String idPeriodo) {
+    return _db
+        .collection(_col)
+        .where('periodo', isEqualTo: idPeriodo) // Filtra por periodo
+        .snapshots() // Escucha en tiempo real
+        .map((snapshot) {
+      // Inicializa un mapa para contar las reservaciones por estado
+      Map<String, int> estadoCount = {
+        'pendiente': 0,
+        'confirmado': 0,
+        'cancelado': 0,
+        'finalizado': 0,
+      };
+
+      // Recorre todos los documentos y cuenta las reservaciones por estado
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final estado = data['estado'];
+
+        // Solo cuenta los estados válidos
+        if (estadoCount.containsKey(estado)) {
+          estadoCount[estado] = estadoCount[estado]! + 1;
+        }
+      }
+
+      return estadoCount;
+    });
+  }
+
+  Stream<Map<String, int>> obtenerReservacionesPorSeccion(String idPeriodo) {
+    return _db
+        .collection(_col)
+        .where('periodo', isEqualTo: idPeriodo) // Filtra por periodo
+        .snapshots() // Escucha en tiempo real
+        .map((snapshot) {
+      // Inicializa un mapa para contar las reservaciones por secciones
+      Map<String, int> seccionCount = {
+        'A': 0,
+        'B': 0,
+        'C': 0,
+        'D': 0,
+      };
+
+      // Recorre todos los documentos y cuenta las reservaciones por sección
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final seccion = data['seccion'];
+
+        // Solo cuenta las reservaciones con secciones válidas
+        if (seccionCount.containsKey(seccion)) {
+          seccionCount[seccion] = seccionCount[seccion]! + 1;
+        }
+      }
+
+      return seccionCount;
+    });
   }
 }

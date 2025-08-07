@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:parqueadero/views/periodo_view.dart'; // Importa la vista PeriodoView
-import 'package:parqueadero/views/espacio_view.dart'; // Importa la vista EspacioView
-import 'package:parqueadero/views/reportes_view.dart';
+import 'package:parqueadero/views/espacio_view.dart';
+import 'package:parqueadero/views/reporte_view.dart'; // Importa la vista EspacioView
 
 class AdminPanelScreen extends StatelessWidget {
   @override
@@ -65,18 +65,17 @@ class AdminPanelScreen extends StatelessWidget {
 
             SizedBox(height: 20),
 
-            // Botón para ir a la vista de reportes
             ElevatedButton(
               onPressed: () {
-                // Navega a la vista de reportes cuando se presiona el botón
-                /*Navigator.push(
+                // Navega a la vista EspacioView cuando se presiona el botón
+                Navigator.push(
                   context,
                   MaterialPageRoute(
                       builder: (context) =>
-                          ReportesView()), // Navega a ReportesView
-                );*/
+                          ReporteView()), // Navega a EspacioView
+                );
               },
-              child: Text('Reportes'),
+              child: Text('Ver Reportes'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 shape: RoundedRectangleBorder(

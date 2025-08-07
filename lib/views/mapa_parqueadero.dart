@@ -332,13 +332,20 @@ class _MapaParqueaderoScreenState extends State<MapaParqueaderoScreen> {
         estado: 'pendiente',
       );
 
+      // Aseguramos que el token esté actualizado antes de ejecutar la creación de reservaciones
+      await FirebaseAuth.instance.currentUser?.getIdToken(true);
+
+      // Llamamos a la función que maneja la creación de reservaciones
       await _reservController.crearReservacionesPorRango(base);
+
+      // Actualizamos el espacio a ocupado
       await _espacioController.ocuparEspacio(_espacioSeleccionadoId!);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Reservaciones creadas exitosamente')),
       );
 
+      // Limpiamos los valores de la UI
       setState(() {
         _zonaSeleccionada = null;
         _espacioSeleccionadoId = null;
