@@ -1,0 +1,42 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "parqueadero-cfd1f",
+          "appId": "1:593436426291:android:843575a5cea96832aa6346",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "parqueadero-cfd1f",
+          "configurations": {
+            "android": "1:593436426291:android:843575a5cea96832aa6346",
+            "ios": "1:593436426291:ios:bba02bfac83f7e74aa6346"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint",
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ]
+    }
+  ],
+  "firestore": {
+    "indexes": "firestore.indexes.json"
+  }
+}

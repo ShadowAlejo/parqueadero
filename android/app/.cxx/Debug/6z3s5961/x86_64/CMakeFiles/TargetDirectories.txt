@@ -1,0 +1,2 @@
+C:/proyectosfluter/parqueadero/android/app/.cxx/Debug/6z3s5961/x86_64/CMakeFiles/edit_cache.dir
+C:/proyectosfluter/parqueadero/android/app/.cxx/Debug/6z3s5961/x86_64/CMakeFiles/rebuild_cache.dir
