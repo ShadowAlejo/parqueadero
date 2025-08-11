@@ -5,6 +5,7 @@ import '../models/usuario.dart';
 class AuthController {
   final _auth = FirebaseAuth.instance;
   final _colUsuarios = FirebaseFirestore.instance.collection('usuarios');
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   // Stream que emite cambios de estado de sesión
   Stream<User?> get authStateChanges => _auth.authStateChanges();
@@ -89,4 +90,17 @@ class AuthController {
   /// Devuelve el UID del usuario actualmente autenticado,
   /// o `null` si no hay sesión iniciada.
   String? get currentUserId => _auth.currentUser?.uid;
+  Future<int> obtenerNumeroDeUsuarios() async {
+    try {
+      // Obtiene la colección de usuarios
+      final usuariosSnapshot = await _db.collection('usuarios').get();
+
+      // Retorna el número de documentos (usuarios) en la colección
+      return usuariosSnapshot.size;
+    } catch (e) {
+      // Si ocurre un error, imprime el mensaje y retorna 0
+      print('Error al obtener el número de usuarios: $e');
+      return 0;
+    }
+  }
 }

@@ -107,4 +107,28 @@ class EspacioController {
         .doc(idEspacio)
         .update({'disponible': true});
   }
+
+  /// Cambia la disponibilidad de todos los espacios a true
+  Future<void> cambiarDisponibilidadDeTodosLosEspacios() async {
+    try {
+      // Obtener todos los documentos de la colección 'espacios'
+      final querySnapshot = await _db.collection('espacios').get();
+
+      // Iniciar un batch para actualizar todos los espacios
+      final batch = _db.batch();
+
+      // Recorremos los documentos y actualizamos el campo 'disponible' a true
+      for (var doc in querySnapshot.docs) {
+        final espacioRef = _db.collection('espacios').doc(doc.id);
+        batch.update(espacioRef, {'disponible': true});
+      }
+
+      // Ejecutar el batch
+      await batch.commit();
+
+      print('Todos los espacios han sido marcados como disponibles.');
+    } catch (e) {
+      print('Error al cambiar la disponibilidad de los espacios: $e');
+    }
+  }
 }

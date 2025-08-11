@@ -88,9 +88,15 @@ class ReservacionController {
           'La fecha fin debe ser igual o posterior a la fecha inicio.');
     }
 
-    final batch = _db.batch();
+    // Retry mechanism with exponential backoff
+    int attempts = 0;
+    const maxAttempts = 3;
 
     for (int i = 0; i < totalDias; i++) {
+      // 1. Espera 1 segundo antes de cada creación (retraso controlado)
+      await Future.delayed(Duration(seconds: 1));
+
+      // 2. Calcula fechaInicio/fechaFin para el día i
       final diaActual = inicio.add(Duration(days: i));
       final fechaIniConHora = DateTime(
         diaActual.year,
@@ -98,16 +104,16 @@ class ReservacionController {
         diaActual.day,
         r.fechaInicio.hour,
         r.fechaInicio.minute,
-      ).toUtc(); // Convertir a UTC
-
+      ).toUtc();
       final fechaFinConHora = DateTime(
         diaActual.year,
         diaActual.month,
         diaActual.day,
         r.fechaFin.hour,
         r.fechaFin.minute,
-      ).toUtc(); // Convertir a UTC
+      ).toUtc();
 
+      // 3. Prepara la reservación del día
       final rDia = Reservacion(
         id: '',
         usuarioRef: r.usuarioRef,
@@ -120,16 +126,40 @@ class ReservacionController {
         estado: r.estado,
       );
 
-      // Agregar la reservación al batch
-      batch.set(_db.collection(_col).doc(), rDia.toMap());
+      // Intento de escribir en Firestore con reintentos
+      while (attempts < maxAttempts) {
+        try {
+          // 4. Inserta la reservación (operación de escritura)
+          final docRef = _db.collection(_col).doc();
+          await docRef.set(rDia.toMap());
 
-      // Agregar la actualización del espacio al batch
-      batch.update(_db.collection('espacios').doc(r.espacioRef.id), {
-        'disponible': false,
-      });
+          // 5. Usa una transacción para actualizar la disponibilidad del espacio
+          await _db.runTransaction((transaction) async {
+            final espacioRef = _db.collection('espacios').doc(r.espacioRef.id);
+            final espacioDoc = await transaction.get(espacioRef);
+
+            if (!espacioDoc.exists) {
+              throw Exception('El espacio no existe.');
+            }
+
+            // Verificar si el espacio está disponible antes de actualizarlo
+            transaction.update(espacioRef, {'disponible': false});
+          });
+
+          break; // Salir del ciclo de reintento si todo fue exitoso
+        } catch (e) {
+          attempts++;
+          print("Error al procesar el día ${i + 1}: $e");
+
+          if (attempts >= maxAttempts) {
+            throw Exception("Error tras $maxAttempts intentos: $e");
+          }
+
+          // Exponential backoff para reintentos
+          await Future.delayed(Duration(seconds: 2 ^ attempts));
+        }
+      }
     }
-
-    await batch.commit();
   }
 
   // Obtiene la información del espacio y periodo relacionados con una reservación
@@ -227,35 +257,44 @@ class ReservacionController {
       );
 
       // Verificar que hoy esté dentro de la reserva
-      if (hoy.isBefore(inicio) || hoy.isAfter(fin)) {
-        throw Exception('La reservación no cubre el día de hoy.');
-      }
-
-      // Caso 1: reserva de un solo día (hoy es inicio y fin)
-      final esUnDia = inicio.isAtSameMomentAs(fin);
-      if (esUnDia) {
-        // Marcamos la reserva completa como cancelada
+      if (hoy.isBefore(inicio)) {
+        // Caso para reservaciones futuras: solo se cancelan si son posteriores a hoy
         tx.update(reservRef, {'estado': 'cancelado'});
-      } else {
-        // Multi-día: solo ajustamos el rango para quitar hoy
-        if (hoy.isAtSameMomentAs(inicio)) {
-          // Hoy es primer día: desplazamos fechaInicio +1
-          final nuevoInicio = hoy.add(Duration(days: 1));
-          tx.update(reservRef, {
-            'fechaInicio': Timestamp.fromDate(nuevoInicio),
-          });
+        // Liberar el espacio para los días posteriores
+        final espacioRef =
+            _db.collection(_colEspacios).doc(reserv.espacioRef.id);
+        tx.update(espacioRef, {'disponible': true});
+      } else if (hoy.isBefore(fin) || hoy.isAtSameMomentAs(fin)) {
+        // Caso para reservas que están activas hoy
+        // Caso 1: reserva de un solo día (hoy es inicio y fin)
+        final esUnDia = inicio.isAtSameMomentAs(fin);
+        if (esUnDia) {
+          // Marcamos la reserva completa como cancelada
+          tx.update(reservRef, {'estado': 'cancelado'});
         } else {
-          // Hoy es último o día intermedio: acortamos fechaFin a ayer
-          final finAnterior = hoy.subtract(Duration(days: 1));
-          tx.update(reservRef, {
-            'fechaFin': Timestamp.fromDate(finAnterior),
-          });
+          // Multi-día: solo ajustamos el rango para quitar hoy
+          if (hoy.isAtSameMomentAs(inicio)) {
+            // Hoy es primer día: desplazamos fechaInicio +1
+            final nuevoInicio = hoy.add(Duration(days: 1));
+            tx.update(reservRef, {
+              'fechaInicio': Timestamp.fromDate(nuevoInicio),
+            });
+          } else {
+            // Hoy es último o día intermedio: acortamos fechaFin a ayer
+            final finAnterior = hoy.subtract(Duration(days: 1));
+            tx.update(reservRef, {
+              'fechaFin': Timestamp.fromDate(finAnterior),
+            });
+          }
         }
-      }
 
-      // Liberar el espacio para hoy
-      final espacioRef = _db.collection(_colEspacios).doc(reserv.espacioRef.id);
-      tx.update(espacioRef, {'disponible': true});
+        // Liberar el espacio para hoy
+        final espacioRef =
+            _db.collection(_colEspacios).doc(reserv.espacioRef.id);
+        tx.update(espacioRef, {'disponible': true});
+      } else {
+        throw Exception('La reservación ya ha finalizado.');
+      }
     });
   }
 
@@ -344,29 +383,115 @@ class ReservacionController {
   /// campo `fechaInicio` sea ≥ mañana (en la zona UTC de tu servidor),
   /// y `false` en caso contrario.
   Future<bool> hayReservasFuturasParaEspacio(String idEspacio) async {
-    // 1) Referencia al espacio
+    // 1) Verificar si hay un periodo activo
+    final periodoRef = FirebaseFirestore.instance
+        .collection('periodos')
+        .where('activo', isEqualTo: true)
+        .limit(1);
+    final periodoSnap = await periodoRef.get();
+
+    // Si no hay periodo activo, no realizamos ninguna operación
+    if (periodoSnap.docs.isEmpty) {
+      return false; // No hay periodo activo
+    }
+
+    // 2) Referencia al espacio
     final espacioRef =
         FirebaseFirestore.instance.collection('espacios').doc(idEspacio);
 
-    // 2) Calcular mañana (solo fecha, sin hora)
+    // 3) Calcular mañana (solo fecha, sin hora)
     final hoy = DateTime.now();
     final inicioDeManana =
         DateTime(hoy.year, hoy.month, hoy.day).add(const Duration(days: 1));
 
-    // 3) Query: solo filtramos por 'espacio' (índice simple)
+    // 4) Query: solo filtramos por 'espacio' (índice simple)
     final snap = await FirebaseFirestore.instance
         .collection('reservaciones')
-        .where('espacio', isEqualTo: espacioRef)
+        .where('espacio', isEqualTo: espacioRef) // solo filtro por espacio
         .get();
 
-    // 4) Filtrado en cliente: buscar la primera fecha >= inicioDeManana
+    // 5) Filtrado en cliente: buscar la primera reserva con fecha >= inicioDeManana
     for (var doc in snap.docs) {
       final fechaInicio = (doc.get('fechaInicio') as Timestamp).toDate();
-      if (!fechaInicio.isBefore(inicioDeManana)) {
-        return true;
+      if (fechaInicio.isAfter(inicioDeManana) ||
+          fechaInicio.isAtSameMomentAs(inicioDeManana)) {
+        return true; // Hay una reserva futura
       }
     }
 
-    return false;
+    return false; // No hay reservas futuras
+  }
+
+  Stream<List<Reservacion>> obtenerReservacionesPorPeriodo(String idPeriodo) {
+    return _db
+        .collection(_col)
+        .where('periodo',
+            isEqualTo: idPeriodo) // Filtra directamente en la consulta
+        .snapshots() // Escucha en tiempo real
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) =>
+              Reservacion.fromSnapshot(doc)) // Convierte a objetos Reservacion
+          .toList();
+    });
+  }
+
+  Stream<Map<String, int>> obtenerNumeroDeReservacionesPorEstado(
+      String idPeriodo) {
+    return _db
+        .collection(_col)
+        .where('periodo', isEqualTo: idPeriodo) // Filtra por periodo
+        .snapshots() // Escucha en tiempo real
+        .map((snapshot) {
+      // Inicializa un mapa para contar las reservaciones por estado
+      Map<String, int> estadoCount = {
+        'pendiente': 0,
+        'confirmado': 0,
+        'cancelado': 0,
+        'finalizado': 0,
+      };
+
+      // Recorre todos los documentos y cuenta las reservaciones por estado
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final estado = data['estado'];
+
+        // Solo cuenta los estados válidos
+        if (estadoCount.containsKey(estado)) {
+          estadoCount[estado] = estadoCount[estado]! + 1;
+        }
+      }
+
+      return estadoCount;
+    });
+  }
+
+  Stream<Map<String, int>> obtenerReservacionesPorSeccion(String idPeriodo) {
+    return _db
+        .collection(_col)
+        .where('periodo', isEqualTo: idPeriodo) // Filtra por periodo
+        .snapshots() // Escucha en tiempo real
+        .map((snapshot) {
+      // Inicializa un mapa para contar las reservaciones por secciones
+      Map<String, int> seccionCount = {
+        'A': 0,
+        'B': 0,
+        'C': 0,
+        'D': 0,
+      };
+
+      // Recorre todos los documentos y cuenta las reservaciones por sección
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final seccion = data['seccion'];
+
+        // Solo cuenta las reservaciones con secciones válidas
+        if (seccionCount.containsKey(seccion)) {
+          seccionCount[seccion] = seccionCount[seccion]! + 1;
+        }
+      }
+
+      return seccionCount;
+    });
   }
 }
