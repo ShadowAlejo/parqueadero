@@ -90,6 +90,8 @@ class AuthController {
   /// Devuelve el UID del usuario actualmente autenticado,
   /// o `null` si no hay sesión iniciada.
   String? get currentUserId => _auth.currentUser?.uid;
+
+  // Función para obtener el número de usuarios registrados
   Future<int> obtenerNumeroDeUsuarios() async {
     try {
       // Obtiene la colección de usuarios

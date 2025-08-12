@@ -422,72 +422,124 @@ class ReservacionController {
     return false; // No hay reservas futuras
   }
 
-  Stream<List<Reservacion>> obtenerReservacionesPorPeriodo(String idPeriodo) {
-    return _db
-        .collection(_col)
-        .where('periodo',
-            isEqualTo: idPeriodo) // Filtra directamente en la consulta
-        .snapshots() // Escucha en tiempo real
-        .map((snapshot) {
-      return snapshot.docs
-          .map((doc) =>
-              Reservacion.fromSnapshot(doc)) // Convierte a objetos Reservacion
-          .toList();
-    });
+  /// Retorna el número de reservaciones existentes en un periodo específico.
+  /// Usa aggregate `count()` (si está disponible) y, si falla, hace un get() normal.
+  /// `periodo` es una instancia completa de tu modelo (p.ej. _selectedPeriodo).
+  Future<int> contarReservacionesDePeriodo(Periodo? periodo) async {
+    if (periodo == null || periodo.idPeriodo.isEmpty) return 0;
+
+    // Ajusta el nombre de la colección si en tu proyecto es 'periodo' en singular.
+    final periodoRef = _db.collection('periodo').doc(periodo.idPeriodo);
+
+    final col =
+        _db.collection('reservaciones').where('periodo', isEqualTo: periodoRef);
+
+    // 1) Intento eficiente con aggregate count()
+    try {
+      final agg = await col.count().get();
+      return agg.count ?? 0; // <- aquí
+    } catch (_) {
+      final snap = await col.get();
+      return snap.size;
+    }
   }
 
-  Stream<Map<String, int>> obtenerNumeroDeReservacionesPorEstado(
-      String idPeriodo) {
-    return _db
-        .collection(_col)
-        .where('periodo', isEqualTo: idPeriodo) // Filtra por periodo
-        .snapshots() // Escucha en tiempo real
-        .map((snapshot) {
-      // Inicializa un mapa para contar las reservaciones por estado
-      Map<String, int> estadoCount = {
-        'pendiente': 0,
-        'confirmado': 0,
-        'cancelado': 0,
-        'finalizado': 0,
-      };
+  Future<Map<String, int>> obtenerNumeroDeReservacionesPorEstado(
+      Periodo? periodo) async {
+    // Estados soportados
+    const estados = ['pendiente', 'confirmado', 'cancelado', 'finalizado'];
 
-      // Recorre todos los documentos y cuenta las reservaciones por estado
-      for (var doc in snapshot.docs) {
-        final data = doc.data();
+    // Mapa base con ceros
+    final conteo = {for (final e in estados) e: 0};
+
+    // Validaciones básicas
+    if (periodo == null || periodo.idPeriodo.isEmpty) return conteo;
+
+    // Referencia al periodo (ajusta el nombre si tu colección es 'periodo' en singular)
+    final periodoRef = _db.collection('periodo').doc(periodo.idPeriodo);
+
+    // Consulta base a 'reservaciones' filtrando por el periodo (ajusta si tu colección se llama distinto)
+    final base =
+        _db.collection('reservaciones').where('periodo', isEqualTo: periodoRef);
+
+    // 1) Intento eficiente con aggregate count() por cada estado
+    try {
+      final futures = estados
+          .map(
+              (estado) => base.where('estado', isEqualTo: estado).count().get())
+          .toList();
+
+      final snaps = await Future.wait(futures);
+      for (int i = 0; i < estados.length; i++) {
+        final c = snaps[i].count; // en plugins recientes es int no-nulo
+        conteo[estados[i]] = (c is int) ? c : (c ?? 0);
+      }
+      return conteo;
+    } catch (_) {
+      // 2) Fallback: leer documentos y contar en memoria
+      final snap = await base.get();
+      for (final doc in snap.docs) {
+        final data = doc.data() as Map<String, dynamic>;
         final estado = data['estado'];
+        if (estado is String && conteo.containsKey(estado)) {
+          conteo[estado] = conteo[estado]! + 1;
+        }
+      }
+      return conteo;
+    }
+  }
 
-        // Solo cuenta los estados válidos
-        if (estadoCount.containsKey(estado)) {
-          estadoCount[estado] = estadoCount[estado]! + 1;
+  // Cuenta reservas por sección (A, B, C, D) para el periodo seleccionado.
+  // _col debe apuntar a la colección de 'reservaciones'.
+  Stream<Map<String, int>> obtenerReservacionesPorSeccion(Periodo? periodo) {
+    // Si no hay periodo seleccionado, devolvemos ceros.
+    if (periodo == null || periodo.idPeriodo.isEmpty) {
+      return Stream.value({'A': 0, 'B': 0, 'C': 0, 'D': 0});
+    }
+
+    // Referencia al documento del periodo (colección 'periodos').
+    final periodoRef = _db.collection('periodo').doc(periodo.idPeriodo);
+
+    return _db
+        .collection(_col /* 'reservaciones' */)
+        .where('periodo', isEqualTo: periodoRef)
+        .snapshots()
+        .asyncMap((snapshot) async {
+      // Mapa de conteo por sección
+      final Map<String, int> seccionCount = {'A': 0, 'B': 0, 'C': 0, 'D': 0};
+
+      if (snapshot.docs.isEmpty) return seccionCount;
+
+      // 1) Reunimos referencias únicas de espacios presentes en las reservaciones
+      final Set<String> espacioPaths = {};
+      final List<DocumentReference> espacioRefs = [];
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final dynamic ref = data['espacio'];
+        if (ref is DocumentReference && espacioPaths.add(ref.path)) {
+          espacioRefs.add(ref);
         }
       }
 
-      return estadoCount;
-    });
-  }
+      if (espacioRefs.isEmpty) return seccionCount;
 
-  Stream<Map<String, int>> obtenerReservacionesPorSeccion(String idPeriodo) {
-    return _db
-        .collection(_col)
-        .where('periodo', isEqualTo: idPeriodo) // Filtra por periodo
-        .snapshots() // Escucha en tiempo real
-        .map((snapshot) {
-      // Inicializa un mapa para contar las reservaciones por secciones
-      Map<String, int> seccionCount = {
-        'A': 0,
-        'B': 0,
-        'C': 0,
-        'D': 0,
-      };
+      // 2) Leemos todos los espacios en paralelo y armamos un mapa path -> seccion
+      final espacioSnaps = await Future.wait(espacioRefs.map((r) => r.get()));
+      final Map<String, String?> pathToSeccion = {};
+      for (final snap in espacioSnaps) {
+        final m = snap.data() as Map<String, dynamic>?;
+        pathToSeccion[snap.reference.path] = m?['seccion'] as String?;
+      }
 
-      // Recorre todos los documentos y cuenta las reservaciones por sección
-      for (var doc in snapshot.docs) {
+      // 3) Recorremos las reservaciones y sumamos por la sección del espacio
+      for (final doc in snapshot.docs) {
         final data = doc.data();
-        final seccion = data['seccion'];
-
-        // Solo cuenta las reservaciones con secciones válidas
-        if (seccionCount.containsKey(seccion)) {
-          seccionCount[seccion] = seccionCount[seccion]! + 1;
+        final dynamic ref = data['espacio'];
+        if (ref is DocumentReference) {
+          final sec = pathToSeccion[ref.path];
+          if (sec != null && seccionCount.containsKey(sec)) {
+            seccionCount[sec] = seccionCount[sec]! + 1;
+          }
         }
       }
 

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:parqueadero/views/periodo_view.dart';
+import 'package:parqueadero/views/periodo_view.dart'; // Importa la vista PeriodoView
 import 'package:parqueadero/views/espacio_view.dart';
-import 'package:parqueadero/views/reporte_view.dart';
-import 'package:parqueadero/theme.dart';
+import 'package:parqueadero/views/reporte_view.dart'; // Importa la vista EspacioView
 
 class AdminPanelScreen extends StatelessWidget {
   @override
@@ -219,35 +218,26 @@ class AdminPanelScreen extends StatelessWidget {
                   color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  icon,
-                  size: 32,
-                  color: color,
-                ),
               ),
-              SizedBox(height: 12),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              SizedBox(height: 8),
-              Flexible(
-                child: Text(
-                  description,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textPrimary.withOpacity(0.7),
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+            ),
+
+            SizedBox(height: 20),
+
+            ElevatedButton(
+              onPressed: () {
+                // Navega a la vista EspacioView cuando se presiona el botón
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          ReporteView()), // Navega a EspacioView
+                );
+              },
+              child: Text('Ver Reportes'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
             ],
