@@ -7,6 +7,9 @@ import 'views/login_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'theme.dart';
 
+// +++ Localización
+import 'package:flutter_localizations/flutter_localizations.dart';
+
 // Notificador global para el modo de tema
 final ValueNotifier<ThemeMode> themeModeNotifier =
     ValueNotifier(ThemeMode.light);
@@ -32,11 +35,21 @@ class MyApp extends StatelessWidget {
           theme: appTheme,
           darkTheme: darkAppTheme,
           themeMode: mode,
+
+          // +++ Español por defecto
+          locale: const Locale('es'),
+          supportedLocales: const [
+            Locale('es'),
+            Locale('en'),
+          ],
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+
           home: StreamBuilder(
             stream: _authCtrl.authStateChanges,
             builder: (ctx, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting)
-                return Center(child: CircularProgressIndicator());
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
               return snapshot.hasData ? HomePage() : LoginPage();
             },
           ),

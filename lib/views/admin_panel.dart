@@ -1,29 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:parqueadero/views/periodo_view.dart'; // Importa la vista PeriodoView
+import 'package:parqueadero/views/periodo_view.dart';
 import 'package:parqueadero/views/espacio_view.dart';
-import 'package:parqueadero/views/reporte_view.dart'; // Importa la vista EspacioView
+import 'package:parqueadero/views/reporte_view.dart';
 
 class AdminPanelScreen extends StatelessWidget {
+  const AdminPanelScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.admin_panel_settings, size: 28),
-            SizedBox(width: 12),
-            Flexible(
-              child: Text(
-                'Panel Administrativo',
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        elevation: 0,
-        centerTitle: true,
+        title: const Text('Panel Administrativo'),
+        backgroundColor: cs.primary,
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -31,147 +21,90 @@ class AdminPanelScreen extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              Theme.of(context).scaffoldBackgroundColor,
+              cs.surfaceVariant.withOpacity(0.6),
+              cs.surface,
             ],
           ),
         ),
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header con información
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.admin_panel_settings,
-                        size: 48,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        'Bienvenido al Panel Administrativo',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Gestiona períodos, espacios y visualiza reportes del sistema',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textPrimary.withOpacity(0.7),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
+                _HeaderCard(),
+                const SizedBox(height: 20),
 
-                SizedBox(height: 30),
-
-                // Título de sección
-                Text(
-                  'Gestión del Sistema',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-
-                SizedBox(height: 16),
-
-                // Grid de opciones administrativas
+                // === GRID RESPONSIVE SIN OVERFLOW ===
                 LayoutBuilder(
                   builder: (context, constraints) {
-                    // Determinar el número de columnas basado en el ancho de la pantalla
-                    int crossAxisCount = constraints.maxWidth > 600 ? 3 : 2;
-                    double childAspectRatio =
-                        constraints.maxWidth > 600 ? 1.3 : 1.1;
+                    final double maxW = constraints.maxWidth;
+                    final bool isWide = maxW >= 900;
+                    final bool isTablet = maxW >= 600 && !isWide;
+                    final int crossAxisCount = isWide ? 3 : (isTablet ? 3 : 2);
 
-                    return GridView.count(
+                    // Cálculo del alto para evitar overflow
+                    // (un poco más alto en móvil)
+                    final double crossAxisSpacing = 16;
+                    final double itemWidth =
+                        (maxW - (crossAxisCount - 1) * crossAxisSpacing) /
+                            crossAxisCount;
+                    final double itemHeight = isWide ? 160 : 190;
+                    final double ratio = itemWidth / itemHeight;
+
+                    return GridView(
                       shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      crossAxisCount: crossAxisCount,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: childAspectRatio,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        crossAxisSpacing: crossAxisSpacing,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: ratio, // <- ratio dinámico
+                      ),
                       children: [
-                        _buildAdminCard(
-                          context,
-                          'Períodos',
-                          Icons.calendar_today,
-                          'Gestionar períodos académicos',
-                          Colors.blue,
-                          () => Navigator.push(
+                        _AdminActionCard(
+                          colorA: cs.primary,
+                          colorB: cs.secondary,
+                          icon: Icons.date_range_rounded,
+                          title: 'Períodos',
+                          subtitle: 'Crear y editar periodos académicos',
+                          onTap: () => Navigator.push(
                             context,
-                            MaterialPageRoute(
-                                builder: (context) => PeriodoView()),
+                            MaterialPageRoute(builder: (_) => PeriodoView()),
                           ),
                         ),
-                        _buildAdminCard(
-                          context,
-                          'Espacios',
-                          Icons.local_parking,
-                          'Administrar espacios de parqueo',
-                          Colors.green,
-                          () => Navigator.push(
+                        _AdminActionCard(
+                          colorA: cs.tertiary,
+                          colorB: cs.primary,
+                          icon: Icons.local_parking_rounded,
+                          title: 'Espacios',
+                          subtitle: 'Gestionar zonas y espacios',
+                          onTap: () => Navigator.push(
                             context,
-                            MaterialPageRoute(
-                                builder: (context) => EspacioView()),
+                            MaterialPageRoute(builder: (_) => EspacioView()),
                           ),
                         ),
-                        _buildAdminCard(
-                          context,
-                          'Reportes',
-                          Icons.analytics,
-                          'Visualizar estadísticas y reportes',
-                          Colors.orange,
-                          () => Navigator.push(
+                        _AdminActionCard(
+                          colorA: cs.secondary,
+                          colorB: cs.tertiary,
+                          icon: Icons.insights_rounded,
+                          title: 'Reportes',
+                          subtitle: 'Ocupación, reservas y métricas',
+                          onTap: () => Navigator.push(
                             context,
-                            MaterialPageRoute(
-                                builder: (context) => ReporteView()),
+                            MaterialPageRoute(builder: (_) => ReporteView()),
                           ),
-                        ),
-                        _buildAdminCard(
-                          context,
-                          'Configuración',
-                          Icons.settings,
-                          'Configuraciones del sistema',
-                          Colors.purple,
-                          () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                    'Configuración próximamente disponible'),
-                                backgroundColor: Colors.blue,
-                              ),
-                            );
-                          },
                         ),
                       ],
                     );
                   },
+                ),
+
+                const SizedBox(height: 28),
+                _InfoBanner(
+                  icon: Icons.info_outline_rounded,
+                  text:
+                      'Consejo: puedes volver aquí desde el menú principal para revisar rápidamente los reportes y abrir o cerrar periodos.',
                 ),
               ],
             ),
@@ -180,69 +113,252 @@ class AdminPanelScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildAdminCard(
-    BuildContext context,
-    String title,
-    IconData icon,
-    String description,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: Offset(0, 2),
-            ),
+// ----------------- Widgets de UI -----------------
+
+class _HeaderCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final txt = Theme.of(context).textTheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            cs.primaryContainer,
+            cs.secondaryContainer.withOpacity(0.9),
           ],
-          border: Border.all(
-            color: color.withOpacity(0.2),
-            width: 1,
-          ),
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: cs.primary.withOpacity(0.18),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        children: [
+          Container(
+            height: 64,
+            width: 64,
+            decoration: BoxDecoration(
+              color: cs.onPrimaryContainer.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(
+              Icons.admin_panel_settings_rounded,
+              size: 34,
+              color: cs.onPrimaryContainer,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Bienvenido al Panel',
+                    style: txt.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: cs.onPrimaryContainer,
+                    )),
+                const SizedBox(height: 4),
+                Text(
+                  'Administra periodos, espacios de parqueo y reportes desde un mismo lugar.',
+                  style: txt.bodyMedium?.copyWith(
+                    color: cs.onPrimaryContainer.withOpacity(0.9),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: const [
+                    _ChipStat(text: 'Gestión rápida'),
+                    _ChipStat(text: 'Diseño Material'),
+                    _ChipStat(text: 'Accesos directos'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChipStat extends StatelessWidget {
+  final String text;
+  const _ChipStat({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: cs.surface.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: cs.outline.withOpacity(0.25)),
+      ),
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: cs.onSurface.withOpacity(0.85),
+            ),
+      ),
+    );
+  }
+}
+
+class _AdminActionCard extends StatefulWidget {
+  final Color colorA;
+  final Color colorB;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _AdminActionCard({
+    required this.colorA,
+    required this.colorB,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  State<_AdminActionCard> createState() => _AdminActionCardState();
+}
+
+class _AdminActionCardState extends State<_AdminActionCard> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final txt = Theme.of(context).textTheme;
+
+    return AnimatedScale(
+      scale: _pressed ? 0.98 : 1.0,
+      duration: const Duration(milliseconds: 120),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(22),
+        onTap: widget.onTap,
+        onTapDown: (_) => setState(() => _pressed = true),
+        onTapCancel: () => setState(() => _pressed = false),
+        onTapUp: (_) => setState(() => _pressed = false),
+        child: Ink(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                widget.colorA.withOpacity(0.18),
+                widget.colorB.withOpacity(0.12),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: cs.outline.withOpacity(0.15)),
+            boxShadow: [
+              BoxShadow(
+                color: cs.primary.withOpacity(0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(16),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Badge de icono
               Container(
-                padding: EdgeInsets.all(12),
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  color: cs.primary.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  widget.icon,
+                  color: cs.primary,
+                  size: 26,
                 ),
               ),
-            ),
+              const SizedBox(height: 12),
 
-            SizedBox(height: 20),
+              // Título
+              Text(
+                widget.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: txt.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 6),
 
-            ElevatedButton(
-              onPressed: () {
-                // Navega a la vista EspacioView cuando se presiona el botón
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          ReporteView()), // Navega a EspacioView
-                );
-              },
-              child: Text('Ver Reportes'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+              // Subtítulo: ocupa el resto y no desborda
+              Expanded(
+                child: Text(
+                  widget.subtitle,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: txt.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    height: 1.2,
+                  ),
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _InfoBanner extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  const _InfoBanner({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final txt = Theme.of(context).textTheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surfaceVariant.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cs.outline.withOpacity(0.2)),
+      ),
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: cs.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: txt.bodyMedium?.copyWith(
+                color: cs.onSurface.withOpacity(0.9),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
