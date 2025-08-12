@@ -6,7 +6,8 @@ class Vehiculo {
   final String marca;
   final String modelo;
   final String urlImagen;
-  final String usuarioId;
+  final DocumentReference
+      usuarioRef; // Aquí almacenamos la referencia al documento de usuario
 
   Vehiculo({
     required this.id,
@@ -14,7 +15,7 @@ class Vehiculo {
     required this.marca,
     required this.modelo,
     required this.urlImagen,
-    required this.usuarioId,
+    required this.usuarioRef,
   });
 
   // Método para convertir un documento de Firestore en un objeto Vehiculo
@@ -25,9 +26,12 @@ class Vehiculo {
       marca: data['marca'] ?? '',
       modelo: data['modelo'] ?? '',
       urlImagen: data['urlImagen'] ?? '',
-      usuarioId: data['usuarioRef'] ?? '',
+      usuarioRef: data[
+          'usuarioRef'], // La referencia al usuario debe ser de tipo DocumentReference
     );
   }
+
+  get tipo => null;
 
   // Método para convertir un objeto Vehiculo en un mapa para Firestore
   Map<String, dynamic> toMap() {
@@ -36,7 +40,7 @@ class Vehiculo {
       'marca': marca,
       'modelo': modelo,
       'urlImagen': urlImagen,
-      'usuarioRef': usuarioId,
+      'usuarioRef': usuarioRef, // Guardamos la referencia al usuario
     };
   }
 }

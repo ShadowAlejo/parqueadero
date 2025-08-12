@@ -4,11 +4,13 @@ import 'package:parqueadero/models/vehiculo_model.dart';
 class VehiculoController {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // Obtener vehículos por usuario (opcional)
+  // Obtener vehículos por usuario
   Stream<List<Vehiculo>> obtenerVehiculosPorUsuario(String usuarioId) {
     return _db
         .collection('vehiculos')
-        .where('usuarioRef', isEqualTo: usuarioId)
+        .where('usuarioRef',
+            isEqualTo:
+                _db.doc('usuarios/$usuarioId')) // Utilizamos la referencia
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) {
